@@ -47,7 +47,7 @@ Antes de configurar las pruebas E2E, asegúrate de tener:
 **Verifica tu entorno:**
 
 ### macOS/Linux
-bash node -v && npm -v
+node -v && npm -v
 
 ### Windows (PowerShell o CMD)
 cmd node -v && npm -v
@@ -65,14 +65,14 @@ bash cd /ruta/a/app-alquiler
 
 
 Instala Playwright como dependencia de desarrollo:
-bash npm install -D @playwright/test
+npm install -D @playwright/test
 
 
 #### Paso 2: Instalar Binarios de Navegadores
 
 Playwright necesita descargar los binarios de los navegadores (Chromium, Firefox, WebKit):
 
-bash npx playwright install
+npx playwright install
 
 
 Esto puede tardar unos minutos dependiendo de tu conexión a internet.
@@ -86,12 +86,12 @@ bash npx playwright install chromium
 
 Genera el archivo de configuración y pruebas de ejemplo:
 
-bash npx playwright init
+`npm init playwright@latest`
 
 
 Cuando se te pregunte:
 - Elige **TypeScript** como lenguaje
-- Coloca las pruebas en el directorio `e2e`
+- Coloca las pruebas en el directorio `tests`
 - Agregar workflow de GitHub Actions: **No** (opcional)
 - Instalar navegadores de Playwright: **No** (ya hecho en el Paso 2)
 
