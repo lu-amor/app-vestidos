@@ -31,7 +31,7 @@ export default async function Page() {
         <p className="text-sm text-slate-600 dark:text-slate-400">Add/edit/delete can be wired to a database later.</p>
         <div className="mt-3 overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead>
+            <thead id='table-header'>
               <tr className="text-left">
                 <th className="py-2 pr-4">ID</th>
                 <th className="py-2 pr-4">Name</th>
