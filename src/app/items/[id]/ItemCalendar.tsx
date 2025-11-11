@@ -137,7 +137,7 @@ const [verifyMessage, setVerifyMessage] = useState<string | null>(null);
                         const isEnd = selection.end === iso;
 
                         let classes =
-                        "text-center text-xs rounded-md px-2 py-3 ";
+                        "text-center text-xs rounded-2xl px-2 py-3 ";
 
                         if (booked) {
                         classes += "bg-[#8a817c] text-white dark:bg-rose-500 dark:text-white";

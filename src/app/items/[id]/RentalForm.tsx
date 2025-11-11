@@ -53,31 +53,31 @@ export default function RentalForm({ itemId, csrf }: Props) {
 
   return (
     <>
-      <form onSubmit={onSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl bg-[#f4f3ee] p-4">
+      <form onSubmit={onSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-4xl bg-[#f4f3ee] p-4">
         <input type="hidden" name="itemId" value={itemId} />
         <input type="hidden" name="csrf" value={csrf} />
         <div className="sm:col-span-2">
           <label className="sr-only" htmlFor="name">Full name</label>
-          <input id="name" name="name" required placeholder="Full name" className="w-full rounded-xl px-4 py-3 text-sm input-field" />
+          <input id="name" name="name" required placeholder="Full name" className="w-full rounded-full px-6 py-3 text-sm input-field" />
         </div>
         <div>
           <label className="sr-only" htmlFor="email">Email</label>
-          <input id="email" name="email" type="email" required placeholder="Email" className="w-full rounded-xl px-4 py-3 text-sm input-field" />
+          <input id="email" name="email" type="email" required placeholder="Email" className="w-full rounded-full px-6 py-3 text-sm input-field" />
         </div>
         <div>
           <label className="sr-only" htmlFor="phone">Phone</label>
-          <input id="phone" name="phone" required placeholder="Phone" className="w-full rounded-xl px-4 py-3 text-sm input-field" />
+          <input id="phone" name="phone" required placeholder="Phone" className="w-full rounded-full px-6 py-3 text-sm input-field" />
         </div>
         <div>
           <label className="sr-only" htmlFor="start">Start date</label>
-          <input id="start" name="start" type="date" required className="w-full rounded-xl px-4 py-3 text-sm input-field" />
+          <input id="start" name="start" type="date" required className="w-full rounded-full px-6 py-3 text-sm input-field" />
         </div>
         <div>
           <label className="sr-only" htmlFor="end">End date</label>
-          <input id="end" name="end" type="date" required className="w-full rounded-xl px-4 py-3 text-sm input-field" />
+          <input id="end" name="end" type="date" required className="w-full rounded-full px-6 py-3 text-sm input-field" />
         </div>
         <div className="sm:col-span-2">
-          <button disabled={loading} className="w-full sm:w-auto rounded-xl bg-[#e0afa0] text-[#463f3a] px-6 py-3 text-sm font-semibold hover:bg-[#d19a8f]">
+          <button disabled={loading} className="w-full sm:w-auto rounded-full bg-[#e0afa0] text-[#463f3a] px-6 py-3 text-sm font-semibold hover:bg-[#d19a8f]">
             {loading ? "Sending…" : "Request rental"}
           </button>
         </div>
