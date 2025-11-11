@@ -92,16 +92,43 @@ export default function RentalForm({ itemId, csrf }: Props) {
         <input type="hidden" name="itemId" value={itemId} />
         <input type="hidden" name="csrf" value={csrf} />
         <div className="sm:col-span-2">
-          <label className="sr-only" htmlFor="name">Full name</label>
-          <input id="name" name="name" required placeholder="Full name" className="w-full rounded-full px-6 py-3 text-sm input-field" />
+            <label className="sr-only" htmlFor="name">Full name</label>
+            <input
+                id="name"
+                name="name"
+                required
+                placeholder="Full name"
+                className="w-full rounded-full px-6 py-3 text-sm input-field"
+                inputMode="text"
+                pattern="[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+"
+                title="Use letters, spaces, hyphens or apostrophes only"
+                maxLength={100}
+                onInput={(e) => {
+                    const el = e.currentTarget as HTMLInputElement;
+                    el.value = el.value.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ\s'-]/g, '');
+                }}
+            />
         </div>
         <div>
           <label className="sr-only" htmlFor="email">Email</label>
           <input id="email" name="email" type="email" required placeholder="Email" className="w-full rounded-full px-6 py-3 text-sm input-field" />
         </div>
         <div>
-          <label className="sr-only" htmlFor="phone">Phone</label>
-          <input id="phone" name="phone" required placeholder="Phone" className="w-full rounded-full px-6 py-3 text-sm input-field" />
+            <label className="sr-only" htmlFor="phone">Phone</label>
+            <input
+                id="phone"
+                name="phone"
+                required
+                placeholder="Phone"
+                className="w-full rounded-full px-6 py-3 text-sm input-field"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={15}
+                onInput={(e) => {
+                    const el = e.currentTarget as HTMLInputElement;
+                    el.value = el.value.replace(/\D+/g, '');
+                }}
+            />
         </div>
         <div>
           <label className="sr-only" htmlFor="start">Start date</label>
