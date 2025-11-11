@@ -5,6 +5,7 @@ import ItemCalendar from "./ItemCalendar";
 import {getOrCreateCsrfToken} from "../../../../lib/CsrfSessionManagement";
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import { Key } from "react";
+import RentalForm from "./RentalForm";
 
 export default async function ItemDetail({params}: { params: { id: string } }) {
   // `params` may be async in Next; await before using its properties.
@@ -53,35 +54,7 @@ export default async function ItemDetail({params}: { params: { id: string } }) {
 
           <div className="mt-10">
             <h2 className="font-semibold mb-3">Schedule a rental</h2>
-            <form action="/api/rentals" method="POST" className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl border p-4">
-              <input type="hidden" name="itemId" value={id} />
-              <input type="hidden" name="csrf" value={csrf} />
-              <div className="sm:col-span-2">
-                <label className="sr-only" htmlFor="name">Full name</label>
-                <input id="name" name="name" required placeholder="Full name" className="w-full rounded-xl border px-4 py-3 text-sm" />
-              </div>
-              <div>
-                <label className="sr-only" htmlFor="email">Email</label>
-                <input id="email" name="email" type="email" required placeholder="Email" className="w-full rounded-xl border px-4 py-3 text-sm" />
-              </div>
-              <div>
-                <label className="sr-only" htmlFor="phone">Phone</label>
-                <input id="phone" name="phone" required placeholder="Phone" className="w-full rounded-xl border px-4 py-3 text-sm" />
-              </div>
-              <div>
-                <label className="sr-only" htmlFor="start">Start date</label>
-                <input id="start" name="start" type="date" required className="w-full rounded-xl border px-4 py-3 text-sm" />
-              </div>
-              <div>
-                <label className="sr-only" htmlFor="end">End date</label>
-                <input id="end" name="end" type="date" required className="w-full rounded-xl border px-4 py-3 text-sm" />
-              </div>
-              <div className="sm:col-span-2">
-                <button className="w-full sm:w-auto rounded-xl bg-fuchsia-600 text-white px-6 py-3 text-sm font-semibold hover:bg-fuchsia-500">
-                  Request rental
-                </button>
-              </div>
-            </form>
+            <RentalForm itemId={id} csrf={csrf} />
             <p className="mt-2 text-xs text-slate-500">No account required. We’ll confirm availability via email.</p>
           </div>
         </div>
