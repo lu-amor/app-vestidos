@@ -39,6 +39,9 @@ const [verifyMessage, setVerifyMessage] = useState<string | null>(null);
         return d;
     });
 
+    // ISO date for the last visible day (today + 59 days)
+    const maxDateISO = toISO(days[days.length - 1]);
+
     function isBooked(date: Date) {
         const iso = toISO(date);
         console.log("Checking booked for", iso, busy);
@@ -91,15 +94,20 @@ const [verifyMessage, setVerifyMessage] = useState<string | null>(null);
         if (startInput) {
         startInput.value = selection.start ?? "";
         startInput.min = toISO(new Date());
+        // Prevent selecting dates beyond what the calendar shows
+        startInput.max = maxDateISO;
         }
 
         if (endInput) {
         endInput.value = selection.end ?? "";
+        // End date can't be before the start selection or before today
         if (selection.start) {
             endInput.min = selection.start;
         } else {
             endInput.min = toISO(new Date());
         }
+        // Prevent selecting dates beyond what the calendar shows
+        endInput.max = maxDateISO;
         }
     }, [selection]);
 

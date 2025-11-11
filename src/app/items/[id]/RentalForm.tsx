@@ -11,11 +11,46 @@ type Props = {
 
 export default function RentalForm({ itemId, csrf }: Props) {
   const [loading, setLoading] = useState(false);
+  // Max date allowed: today + 59 days (align with calendar's 60-day window)
+  const maxDate = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 59);
+    return d.toISOString().slice(0, 10);
+  })();
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     const form = new FormData(e.currentTarget as HTMLFormElement);
+
+    // Basic client-side validation: ensure selected dates are within allowed range
+    const start = (form.get("start") as FormDataEntryValue | null)?.toString() ?? "";
+    const end = (form.get("end") as FormDataEntryValue | null)?.toString() ?? "";
+    const todayISO = new Date().toISOString().slice(0, 10);
+
+    if (!start || !end) {
+      toast.error("Please select start and end dates.");
+      setLoading(false);
+      return;
+    }
+
+    if (start < todayISO) {
+      toast.error("Start date cannot be before today.");
+      setLoading(false);
+      return;
+    }
+
+    if (end < start) {
+      toast.error("End date must be the same as or after the start date.");
+      setLoading(false);
+      return;
+    }
+
+    if (end > maxDate) {
+      toast.error(`Dates must be within the next 60 days (until ${maxDate}).`);
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/rentals", {
@@ -70,11 +105,11 @@ export default function RentalForm({ itemId, csrf }: Props) {
         </div>
         <div>
           <label className="sr-only" htmlFor="start">Start date</label>
-          <input id="start" name="start" type="date" required className="w-full rounded-full px-6 py-3 text-sm input-field" />
+          <input id="start" name="start" type="date" required max={maxDate} className="w-full rounded-full px-6 py-3 text-sm input-field" />
         </div>
         <div>
           <label className="sr-only" htmlFor="end">End date</label>
-          <input id="end" name="end" type="date" required className="w-full rounded-full px-6 py-3 text-sm input-field" />
+          <input id="end" name="end" type="date" required max={maxDate} className="w-full rounded-full px-6 py-3 text-sm input-field" />
         </div>
         <div className="sm:col-span-2">
           <button disabled={loading} className="w-full sm:w-auto rounded-full bg-[#e0afa0] text-[#463f3a] px-6 py-3 text-sm font-semibold hover:bg-[#d19a8f]">
