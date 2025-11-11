@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import {getItem, getItemRentals} from "@/lib/RentalManagementSystem";
-export function GET(_: Request, { params }: { params: { id: string } }) {
-  const id = Number(params.id);
+
+export async function GET(req: Request, context?: { params?: { id?: string } }) {
+  // Next may provide `params` asynchronously for dynamic routes; await before using.
+  const params = await context?.params;
+  const idStr = params?.id;
+  if (!idStr) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  const id = Number(idStr);
   const item = getItem(id);
   if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
 

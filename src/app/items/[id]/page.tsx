@@ -7,7 +7,9 @@ import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import { Key } from "react";
 
 export default async function ItemDetail({params}: { params: { id: string } }) {
-    const id = Number(params.id);
+  // `params` may be async in Next; await before using its properties.
+  const p = await params;
+  const id = Number(p.id);
     const item = getItem(id);
     if (!item) return notFound();
 
