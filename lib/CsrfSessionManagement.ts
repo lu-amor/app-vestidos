@@ -29,6 +29,7 @@ export async function setAdminSession() {
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
         path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
     });
     return token;
 }
@@ -40,6 +41,13 @@ export async function clearAdminSession() {
 }
 
 export async function isAdmin() {
-    return !!(await cookies()).get(SESSION_COOKIE)?.value;
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get(SESSION_COOKIE);
+    console.log('isAdmin check:', {
+        cookieName: SESSION_COOKIE,
+        cookieValue: sessionCookie?.value,
+        hasSession: !!sessionCookie?.value
+    });
+    return !!sessionCookie?.value;
 }
 

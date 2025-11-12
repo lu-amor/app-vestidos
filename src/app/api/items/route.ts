@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {listItems} from "../../../../lib/RentalManagementSystem";
+import {listItems, addItem, updateItem, deleteItem} from "../../../../lib/RentalManagementSystem";
 
 export function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -22,4 +22,47 @@ export function GET(req: Request) {
   }));
 
   return NextResponse.json({ items });
+}
+
+export async function POST(request: Request) {
+  // Verificar autenticación
+  const cookieHeader = request.headers.get('cookie');
+  const sessionCookie = cookieHeader?.includes('gr_admin=');
+  
+  if (!sessionCookie) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { name, category, pricePerDay, sizes, color, style, description, images } = body;
+
+    // Validar campos requeridos
+    if (!name || !category || !pricePerDay || !sizes || !color) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    const newItem = {
+      name,
+      category,
+      pricePerDay: Number(pricePerDay),
+      sizes: Array.isArray(sizes) ? sizes : [sizes],
+      color,
+      style: style || category,
+      description: description || `${name} - ${color}`,
+      images: images || ['/images/placeholder.jpg'],
+      alt: `${name} in ${color}`
+    };
+
+    const result = addItem(newItem);
+    
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true, item: result.item }, { status: 201 });
+  } catch (error) {
+    console.error('Error creating item:', error);
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 }
