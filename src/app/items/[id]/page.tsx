@@ -6,8 +6,8 @@ import {getOrCreateCsrfToken} from "../../../../lib/CsrfSessionManagement";
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import { Key } from "react";
 
-export default async function ItemDetail({params}: { params: { id: string } }) {
-    const id = Number(params.id);
+export default async function ItemDetail({ params }: { params: any }) {
+  const id = Number(params.id);
     const item = getItem(id);
     if (!item) return notFound();
 

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "../../../../../../../lib/CsrfSessionManagement";
 import { cancelRental } from "../../../../../../../lib/RentalManagementSystem";
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: any }) {
   // Verificar cookie directamente desde headers
   const cookieHeader = request.headers.get('cookie');
   const sessionCookie = cookieHeader?.includes('gr_admin=');

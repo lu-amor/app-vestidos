@@ -1,10 +1,26 @@
 import {getOrCreateCsrfToken} from "@/lib/CsrfSessionManagement";
+import Link from "next/link";
 
 export default async function AdminLogin() {
   const csrf = await getOrCreateCsrfToken();
   
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+      <Link
+        href="/"
+        className="absolute top-6 left-6 bg-gray-800 hover:bg-gray-700 text-gray-200 px-4 py-2 rounded-lg border border-gray-700 transition flex items-center gap-2"
+      >
+        <svg 
+          className="w-4 h-4" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        Volver
+      </Link>
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white">Panel de Administración</h1>

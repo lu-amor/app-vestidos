@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {getItem, updateItem, deleteItem} from "../../../../../lib/RentalManagementSystem";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: any }) {
   const id = parseInt(params.id);
   const item = getItem(id);
   
@@ -12,7 +12,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
   return NextResponse.json({ item });
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: any }) {
   // Verificar autenticación
   const cookieHeader = request.headers.get('cookie');
   const sessionCookie = cookieHeader?.includes('gr_admin=');
@@ -49,7 +49,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: any }) {
   // Verificar autenticación
   const cookieHeader = request.headers.get('cookie');
   const sessionCookie = cookieHeader?.includes('gr_admin=');
