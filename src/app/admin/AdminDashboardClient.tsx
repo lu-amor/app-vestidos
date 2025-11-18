@@ -437,12 +437,12 @@ export default function AdminDashboardClient() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 bg-gray-900 min-h-screen">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 text-gray-900 dark:text-white min-h-screen transition-colors">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Dashboard de Administración</h1>
-          <p className="text-gray-300 mt-1">Gestiona tu inventario y alquileres</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard de Administración</h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-1">Gestiona tu inventario y alquileres</p>
         </div>
         <button 
           onClick={handleLogout}
@@ -454,7 +454,7 @@ export default function AdminDashboardClient() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
-        <div className="bg-black border border-gray-700 rounded-lg shadow-sm p-6">
+        <div className="border border-gray-700 rounded-lg shadow-sm p-6">
           <div className="flex items-center">
             <div className="p-3 bg-blue-500 rounded-lg">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -462,13 +462,13 @@ export default function AdminDashboardClient() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-400">Total Items</p>
-              <p className="text-2xl font-bold text-white">{items.length}</p>
+              <p className="text-sm font-medium text-400">Total Items</p>
+              <p className="text-2xl font-bold">{items.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-black border border-gray-700 rounded-lg shadow-sm p-6">
+        <div className="border border-gray-700 rounded-lg shadow-sm p-6">
           <div className="flex items-center">
             <div className="p-3 bg-green-500 rounded-lg">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -476,13 +476,13 @@ export default function AdminDashboardClient() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-400">Disponibles</p>
-              <p className="text-2xl font-bold text-white">{items.filter(i => !i.isCurrentlyRented).length}</p>
+              <p className="text-sm font-medium text-400">Disponibles</p>
+              <p className="text-2xl font-bold text">{items.filter(i => !i.isCurrentlyRented).length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-black border border-gray-700 rounded-lg shadow-sm p-6">
+        <div className="border border-gray-700 rounded-lg shadow-sm p-6">
           <div className="flex items-center">
             <div className="p-3 bg-orange-500 rounded-lg">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -490,13 +490,13 @@ export default function AdminDashboardClient() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-400">Alquileres Activos</p>
-              <p className="text-2xl font-bold text-white">{currentRentals.length}</p>
+              <p className="text-sm font-medium text-400">Alquileres Activos</p>
+              <p className="text-2xl font-bold">{currentRentals.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-black border border-gray-700 rounded-lg shadow-sm p-6">
+        <div className="border border-gray-700 rounded-lg shadow-sm p-6">
           <div className="flex items-center">
             <div className="p-3 bg-purple-500 rounded-lg">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -504,15 +504,15 @@ export default function AdminDashboardClient() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-400">Próximos Alquileres</p>
-              <p className="text-2xl font-bold text-white">{upcomingRentals.length}</p>
+              <p className="text-sm font-medium text-400">Próximos Alquileres</p>
+              <p className="text-2xl font-bold">{upcomingRentals.length}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-black border border-gray-700 rounded-lg shadow-sm p-6 mt-8">
+      <div className="border border-gray-700 rounded-lg shadow-sm p-6 mt-8">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <input
@@ -520,13 +520,13 @@ export default function AdminDashboardClient() {
               placeholder="Buscar por nombre, color o estilo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white placeholder-gray-400"
+              className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-800 placeholder-gray-400"
             />
           </div>
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white"
+            className="px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-800"
           >
             <option value="all">Todas las categorías</option>
             <option value="dress">Vestidos</option>
@@ -537,7 +537,7 @@ export default function AdminDashboardClient() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white"
+            className="px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-800"
           >
             <option value="all">Todos los estados</option>
             <option value="available">Disponible</option>
@@ -549,9 +549,9 @@ export default function AdminDashboardClient() {
       {/* Inventory Grid */}
       <section className="mt-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">Inventario</h2>
+          <h2 className="text-2xl font-bold text-900">Inventario</h2>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-300">
+            <span className="text-sm text-300">
               {filteredItems.length} de {items.length} artículos
             </span>
             <button
@@ -568,7 +568,7 @@ export default function AdminDashboardClient() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredItems.map((item) => (
-            <div key={item.id} className="bg-black border border-gray-700 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
+            <div key={item.id} className="border border-gray-700 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
               <div className="relative h-64 flex-shrink-0">
                 <img
                   src={item.images[0]}
@@ -599,25 +599,25 @@ export default function AdminDashboardClient() {
               
               <div className="p-4 flex flex-col flex-grow">
                 <div className="mb-3">
-                  <h3 className="font-bold text-lg text-white mb-2 line-clamp-2">{item.name}</h3>
-                  <p className="text-sm text-gray-300 line-clamp-2">{item.description}</p>
+                  <h3 className="font-bold text-lg text mb-2 line-clamp-2">{item.name}</h3>
+                  <p className="text-sm text-300 line-clamp-2">{item.description}</p>
                 </div>
                 
                 <div className="space-y-2 mb-4 flex-grow">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-400 font-medium">Categoría:</span>
+                    <span className="text-sm text-400 font-medium">Categoría:</span>
                     <span className="text-sm font-semibold text-white capitalize">{item.category}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-400 font-medium">Color:</span>
+                    <span className="text-sm text-400 font-medium">Color:</span>
                     <span className="text-sm font-semibold text-white capitalize">{item.color}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-400 font-medium">Tallas:</span>
+                    <span className="text-sm text-400 font-medium">Tallas:</span>
                     <span className="text-sm font-semibold text-white">{item.sizes.join(', ')}</span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-gray-700">
-                    <span className="text-sm text-gray-400 font-medium">Precio/día:</span>
+                    <span className="text-sm text-400 font-medium">Precio/día:</span>
                     <span className="text-xl font-bold text-blue-400">${item.pricePerDay}</span>
                   </div>
                 </div>
@@ -667,34 +667,34 @@ export default function AdminDashboardClient() {
 
       {/* Rentals Section */}
       <section className="mt-12">
-        <h2 className="text-2xl font-bold text-white mb-6">Alquileres Programados</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Alquileres Programados</h2>
         
-        <div className="bg-black border border-gray-700 rounded-lg shadow-sm overflow-hidden">
+        <div className="border border-gray-700 rounded-lg shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-700">
-              <thead className="bg-gray-800">
+              <thead className="bg-800">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-300 uppercase tracking-wider">
                     ID del Alquiler
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-300 uppercase tracking-wider">
                     Artículo
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-300 uppercase tracking-wider">
                     Fechas
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-300 uppercase tracking-wider">
                     Cliente
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-300 uppercase tracking-wider">
                     Estado
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-300 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-black divide-y divide-gray-700">
+              <tbody className="divide-y divide-gray-700">
                 {rentals.map((rental) => {
                   const item = items.find(i => i.id === rental.itemId);
                   const isActive = rental.start <= todayDate && rental.end >= todayDate && rental.status === 'active';

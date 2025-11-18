@@ -5,10 +5,10 @@ export default async function AdminLogin() {
   const csrf = await getOrCreateCsrfToken();
   
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-900 flex items-center justify-center px-4">
       <Link
         href="/"
-        className="absolute top-6 left-6 bg-gray-800 hover:bg-gray-700 text-gray-200 px-4 py-2 rounded-lg border border-gray-700 transition flex items-center gap-2"
+        className="absolute top-6 left-6 bg-800 text-200 px-4 py-2 rounded-lg border border-gray-700 transition flex items-center gap-2"
       >
         <svg 
           className="w-4 h-4" 
@@ -23,30 +23,30 @@ export default async function AdminLogin() {
       </Link>
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">Panel de Administración</h1>
-          <p className="text-gray-400 mt-2">Acceso solo para personal autorizado</p>
+          <h1 className="text-3xl font-bold">Panel de Administración</h1>
+          <p className="text-400 mt-2">Acceso solo para personal autorizado</p>
         </div>
         
-        <div className="bg-black border border-gray-700 rounded-lg shadow-lg p-6">
+        <div className="border border-gray-700 rounded-lg shadow-lg p-6">
           <form action="/api/admin/login" method="POST" className="space-y-4">
             <input type="hidden" name="csrf" value={csrf} />
             
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="username" className="block text-sm font-medium text-300 mb-2">
                 Usuario
               </label>
               <input 
                 id="username"
                 name="username" 
                 placeholder="Nombre de usuario" 
-                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white placeholder-gray-400"
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-800 placeholder-gray-400"
                 autoComplete="username"
                 defaultValue="admin"
               />
             </div>
             
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text--300 mb-2">
                 Contraseña
               </label>
               <input 
@@ -54,7 +54,7 @@ export default async function AdminLogin() {
                 name="password" 
                 type="password" 
                 placeholder="Contraseña" 
-                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white placeholder-gray-400"
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-800 text-white placeholder-gray-400"
                 autoComplete="current-password"
                 defaultValue="admin123"
               />
