@@ -134,3 +134,57 @@ export function cancelRental(id: string) {
   r.status = "canceled";
   return { ok: true as const };
 }
+
+// Funciones de ABM para items
+let nextItemId = Math.max(...items.map(i => i.id), 0) + 1;
+
+export function addItem(itemData: Omit<Item, 'id'>) {
+  try {
+    const newItem: Item = {
+      id: nextItemId++,
+      ...itemData
+    };
+    
+    items.push(newItem);
+    return { item: newItem };
+  } catch (error) {
+    return { error: "Failed to create item" as const };
+  }
+}
+
+export function updateItem(id: number, updates: Partial<Omit<Item, 'id'>>) {
+  const index = items.findIndex(i => i.id === id);
+  if (index === -1) return { error: "Item not found" as const };
+  
+  // Verificar si el item tiene alquileres activos
+  const activeRentals = getItemRentals(id);
+  if (activeRentals.length > 0) {
+    return { error: "Cannot update item with active rentals" as const };
+  }
+  
+  try {
+    items[index] = { ...items[index], ...updates };
+    return { item: items[index] };
+  } catch (error) {
+    return { error: "Failed to update item" as const };
+  }
+}
+
+export function deleteItem(id: number) {
+  const index = items.findIndex(i => i.id === id);
+  if (index === -1) return { error: "Item not found" as const };
+  
+  // Verificar si el item tiene alquileres activos
+  const activeRentals = getItemRentals(id);
+  if (activeRentals.length > 0) {
+    return { error: "Cannot delete item with active rentals" as const };
+  }
+  
+  try {
+    const deletedItem = items[index];
+    items.splice(index, 1);
+    return { item: deletedItem };
+  } catch (error) {
+    return { error: "Failed to delete item" as const };
+  }
+}

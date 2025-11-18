@@ -2,12 +2,16 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "../../../../../../../lib/CsrfSessionManagement";
 import { cancelRental } from "../../../../../../../lib/RentalManagementSystem";
 
-export async function POST(req: Request, context?: { params?: { id?: string } }) {
-  if (!isAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const params = await context?.params;
-  const id = params?.id;
-  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
-  const { error } = cancelRental(id);
+export async function POST(request: Request, { params }: { params: any }) {
+  // Verificar cookie directamente desde headers
+  const cookieHeader = request.headers.get('cookie');
+  const sessionCookie = cookieHeader?.includes('gr_admin=');
+  
+  if (!sessionCookie) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  
+  const { error } = cancelRental(params.id);
   if (error) return NextResponse.json({ error }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

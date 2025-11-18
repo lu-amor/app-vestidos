@@ -9,9 +9,8 @@ import RentalForm from "./RentalForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
-export default async function ItemDetail({params}: { params: { id: string } }) {
-    const p = await params;
-    const id = Number(p.id);
+export default async function ItemDetail({ params }: { params: any }) {
+  const id = Number(params.id);
     const item = getItem(id);
     if (!item) return notFound();
 
