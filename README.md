@@ -30,6 +30,14 @@ Check your versions:
 
 ## Setup
 
+### Environment Configuration
+
+1) Copy environment template
+    - `cp .env.example .env.local`
+2) Configure variables (optional for development)
+    - Default admin credentials: `admin` / `admin123`
+    - Variables are already set for local development
+
 ### macOS
 
 1) Install Node.js
@@ -38,9 +46,11 @@ Check your versions:
     - `git clone <your-repo-url> && cd <your-project-folder>`
 3) Install dependencies
     - `npm install`
-4) Start the development server
+4) Set up environment
+    - `cp .env.example .env.local`
+5) Start the development server
     - `npm run dev`
-5) Open the app
+6) Open the app
     - Visit http://localhost:3000
 
 ### Windows
@@ -51,10 +61,22 @@ Check your versions:
     - PowerShell: `git clone <your-repo-url>; cd <your-project-folder>`
 3) Install dependencies
     - `npm install`
-4) Start the development server
+4) Set up environment
+    - `copy .env.example .env.local`
+5) Start the development server
     - `npm run dev`
-5) Open the app
+6) Open the app
     - Visit http://localhost:3000
+
+## Admin Panel Access
+
+- URL: http://localhost:3000/admin
+- Development credentials:
+  - **Username:** admin
+  - **Password:** admin123
+- Protected route: requires authentication to access
+
+**Note:** In production, make sure to change these credentials in your environment variables.
 
 ### Common scripts
 
