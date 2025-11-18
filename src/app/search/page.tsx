@@ -37,7 +37,7 @@ export default function Page({ searchParams }: { searchParams: SearchParams }) {
         <input name="size" defaultValue={size} placeholder="Size" className="rounded-xl border px-3 py-2 text-sm" />
         <input name="color" defaultValue={color} placeholder="Color" className="rounded-xl border px-3 py-2 text-sm" />
         <input name="style" defaultValue={style} placeholder="Style (e.g., cocktail)" className="rounded-xl border px-3 py-2 text-sm" />
-        <button className="rounded-xl bg-fuchsia-600 text-white px-4 py-2 text-sm">Search</button>
+        <button className="rounded-xl bg-[#e0afa0] text-[#463f3a] px-4 py-2 text-sm">Search</button>
       </form>
 
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

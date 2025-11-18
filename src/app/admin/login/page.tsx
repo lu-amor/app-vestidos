@@ -8,7 +8,7 @@ export default async function AdminLogin() {
         <input type="hidden" name="csrf" value={csrf} />
         <input name="username" placeholder="Username" className="rounded-xl border px-4 py-3 text-sm" />
         <input name="password" type="password" placeholder="Password" className="rounded-xl border px-4 py-3 text-sm" />
-        <button className="rounded-xl bg-fuchsia-600 text-white px-4 py-3 text-sm font-semibold">Sign in</button>
+        <button className="rounded-xl bg-[#e0afa0] text-[#463f3a] px-4 py-3 text-sm font-semibold">Sign in</button>
         <p className="text-xs text-slate-500">Protected area. Authorized staff only.</p>
       </form>
     </div>
