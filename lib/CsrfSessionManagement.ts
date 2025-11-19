@@ -37,7 +37,13 @@ export async function setAdminSession() {
 
 export async function clearAdminSession() {
     const c = await cookies();
-    c.set(SESSION_COOKIE, "", { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 0 });
+    c.set(SESSION_COOKIE, "", {
+        httpOnly: true,
+        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 0,
+    });
 }
 
 export async function isAdmin() {

@@ -2,8 +2,9 @@ import {NextResponse} from "next/server";
 import {getItem, updateItem, deleteItem} from "../../../../../lib/RentalManagementSystem";
 
 export async function GET(request: Request, { params }: { params: any }) {
-  const id = parseInt(params.id);
-  const item = getItem(id);
+const resolvedParams = await params;
+const id = parseInt(resolvedParams.id);
+const item = await getItem(id);
   
   if (!item) {
     return NextResponse.json({ error: "Item not found" }, { status: 404 });
@@ -22,7 +23,8 @@ export async function PUT(request: Request, { params }: { params: any }) {
   }
 
   try {
-    const id = parseInt(params.id);
+  const resolvedParams = await params;
+  const id = parseInt(resolvedParams.id);
     const body = await request.json();
     const { name, category, pricePerDay, sizes, color, style, description, images } = body;
 
@@ -59,7 +61,8 @@ export async function DELETE(request: Request, { params }: { params: any }) {
   }
 
   try {
-    const id = parseInt(params.id);
+  const resolvedParams = await params;
+  const id = parseInt(resolvedParams.id);
     const result = deleteItem(id);
     
     if (result.error) {

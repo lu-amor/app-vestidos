@@ -758,7 +758,7 @@ export default function AdminDashboardClient() {
       <Modal
         isOpen={isItemModalOpen}
         onClose={() => !operationLoading && setIsItemModalOpen(false)}
-        title={editingItem ? 'Editar Artículo' : 'Agregar Nuevo Artículo'}
+        title={editingItem ? 'Update Item' : 'Add New Item'}
         maxWidth="lg"
       >
         <ItemForm
