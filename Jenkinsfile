@@ -19,7 +19,5 @@ pipeline {
                 sh 'docker run --rm app-alquiler-vestidos echo "El contenedor se ejecutó correctamente"'
             }
         }
-
-        // Más adelante podrías agregar un stage('Deploy') si lo piden
     }
 }
