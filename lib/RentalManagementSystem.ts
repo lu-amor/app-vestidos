@@ -17,11 +17,23 @@ export type Rental = {
   id: string;
   itemId: number;
   start: string; // ISO date (yyyy-mm-dd)
-  end: string;   // ISO date (yyyy-mm-dd)
+  end: string; // ISO date (yyyy-mm-dd)
   customer: { name: string; email: string; phone: string };
   createdAt: string;
   status: "active" | "canceled";
 };
+
+// Available styles that can be managed from the data layer
+export const AVAILABLE_STYLES = [
+  "Casual",
+  "Clásico",
+  "Formal",
+  "Vintage",
+  "Elegante",
+  "Bohemio",
+  "Minimalista",
+  "Glamuroso",
+] as const;
 
 // In-memory store for demo. Replace with a DB in production.
 const items: Item[] = [
@@ -83,15 +95,37 @@ export function listItems(filters?: {
   size?: string;
   color?: string;
   style?: string;
+  minPrice?: number;
+  maxPrice?: number;
 }) {
   const q = filters?.q?.toLowerCase().trim();
   return items.filter((it) => {
     if (filters?.category && it.category !== filters.category) return false;
     if (filters?.size && !it.sizes.includes(filters.size)) return false;
-    if (filters?.color && it.color.toLowerCase() !== filters.color.toLowerCase()) return false;
-    if (filters?.style && (it.style ?? "").toLowerCase() !== filters.style.toLowerCase()) return false;
+    if (
+      filters?.color &&
+      it.color.toLowerCase() !== filters.color.toLowerCase()
+    )
+      return false;
+    if (
+      filters?.style &&
+      (it.style ?? "").toLowerCase() !== filters.style.toLowerCase()
+    )
+      return false;
+    if (
+      typeof filters?.minPrice === "number" &&
+      it.pricePerDay < filters!.minPrice
+    )
+      return false;
+    if (
+      typeof filters?.maxPrice === "number" &&
+      it.pricePerDay > filters!.maxPrice
+    )
+      return false;
     if (q) {
-      const hay = [it.name, it.color, it.style ?? "", it.category].join(" ").toLowerCase();
+      const hay = [it.name, it.color, it.style ?? "", it.category]
+        .join(" ")
+        .toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -106,7 +140,12 @@ export function getItemRentals(itemId: number) {
   return rentals.filter((r) => r.itemId === itemId && r.status === "active");
 }
 
-export function hasOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string) {
+export function hasOverlap(
+  aStart: string,
+  aEnd: string,
+  bStart: string,
+  bEnd: string
+) {
   return !(aEnd < bStart || bEnd < aStart);
 }
 
@@ -115,11 +154,19 @@ export function isItemAvailable(itemId: number, start: string, end: string) {
   return rs.every((r) => !hasOverlap(start, end, r.start, r.end));
 }
 
-export function createRental(data: Omit<Rental, "id" | "createdAt" | "status">) {
+export function createRental(
+  data: Omit<Rental, "id" | "createdAt" | "status">
+) {
   const ok = isItemAvailable(data.itemId, data.start, data.end);
-  if (!ok) return { error: "Item is not available for the selected dates." as const };
+  if (!ok)
+    return { error: "Item is not available for the selected dates." as const };
   const id = crypto.randomUUID();
-  const rental: Rental = { ...data, id, createdAt: new Date().toISOString(), status: "active" };
+  const rental: Rental = {
+    ...data,
+    id,
+    createdAt: new Date().toISOString(),
+    status: "active",
+  };
   rentals.push(rental);
   return { rental };
 }
