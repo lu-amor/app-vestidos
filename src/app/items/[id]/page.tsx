@@ -10,7 +10,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
 export default async function ItemDetail({ params }: { params: any }) {
-  const id = Number(params.id);
+    // `params` can be a promise in the Next.js app router — await it before accessing.
+    const p = await params;
+    const id = Number(p.id);
     const item = getItem(id);
     if (!item) return notFound();
 

@@ -12,9 +12,9 @@ type SearchParams = {
     end?: string;
 };
 
-export default function Page({ searchParams }: { searchParams: any }) {
-    const { q = "", category = "", size = "", color = "", style = "" } = searchParams || {};
-    const items = listItems({
+export default async function Page({ searchParams }: { searchParams: any }) {
+    const { q = "", category = "", size = "", color = "", style = "" } = (await searchParams) || {};
+    const items = await listItems({
         q,
         category: category || undefined,
         size: size || undefined,

@@ -8,7 +8,7 @@ export type Item = {
   name: string;
   category: Category;
   pricePerDay: number;
-  sizes: string[]; // for shoes you can use "36-41"
+  sizes: string[];
   color: string;
   style?: string;
   description: string;
@@ -26,57 +26,7 @@ export type Rental = {
   status: "active" | "canceled";
 };
 
-// In-memory store for demo. Persisted to `data/items.json` in project root.
-const DEFAULT_ITEMS: Item[] = [
-  {
-    id: 1,
-    name: "Silk Evening Gown",
-    category: "dress",
-    pricePerDay: 79,
-    sizes: ["XS", "S", "M", "L"],
-    color: "champagne",
-    style: "evening",
-    description: "Luxurious silk gown with flattering silhouette.",
-    images: ["/images/dresses/silk-evening-gown.jpg"],
-    alt: "Model wearing a champagne silk evening gown",
-  },
-  {
-    id: 2,
-    name: "Black Tie Dress",
-    category: "dress",
-    pricePerDay: 99,
-    sizes: ["S", "M", "L", "XL"],
-    color: "black",
-    style: "black-tie",
-    description: "Elegant black-tie dress for formal events.",
-    images: ["/images/dresses/black-tie-dress.jpg"],
-    alt: "Elegant black tie dress",
-  },
-  {
-    id: 3,
-    name: "Floral Midi Dress",
-    category: "dress",
-    pricePerDay: 49,
-    sizes: ["XS", "S", "M"],
-    color: "floral",
-    style: "daytime",
-    description: "Bright floral midi for daytime events.",
-    images: ["/images/dresses/floral-midi-dress.jpg"],
-    alt: "Floral midi dress perfect for daytime events",
-  },
-  {
-    id: 4,
-    name: "Velvet Cocktail Dress",
-    category: "dress",
-    pricePerDay: 59,
-    sizes: ["S", "M", "L"],
-    color: "burgundy",
-    style: "cocktail",
-    description: "Rich velvet cocktail dress in deep tones.",
-    images: ["/images/dresses/velvet-cocktail-dress.jpg"],
-    alt: "Velvet cocktail dress in deep tones",
-  },
-];
+// Los vestidos se persisten en data/items.json para consistencia entre las páginas
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const ITEMS_FILE = path.join(DATA_DIR, 'items.json');
@@ -97,8 +47,7 @@ function saveItemsToFile(itemsToSave: Item[]) {
     console.error('Failed to save items to file:', e);
   }
 }
-
-function loadItemsFromFile(): Item[] {
+function readItemsSync(): Item[] {
   try {
     if (fs.existsSync(ITEMS_FILE)) {
       const raw = fs.readFileSync(ITEMS_FILE, { encoding: 'utf8' });
@@ -106,19 +55,18 @@ function loadItemsFromFile(): Item[] {
       if (Array.isArray(parsed)) return parsed as Item[];
     }
   } catch (e) {
-    console.error('Failed to load items from file, falling back to defaults:', e);
+    console.error('Failed to read items file, falling back to empty list:', e);
   }
-  // If missing or invalid, write defaults and return them
   try {
     ensureDataDir();
-    fs.writeFileSync(ITEMS_FILE, JSON.stringify(DEFAULT_ITEMS, null, 2), { encoding: 'utf8' });
+    fs.writeFileSync(ITEMS_FILE, JSON.stringify([], null, 2), { encoding: 'utf8' });
   } catch (e) {
-    console.error('Failed to write default items file:', e);
+    console.error('Failed to write empty items file:', e);
   }
-  return DEFAULT_ITEMS.slice();
+  return [];
 }
 
-let items: Item[] = loadItemsFromFile();
+let items: Item[] = readItemsSync();
 
 let rentals: Rental[] = [];
 
@@ -129,8 +77,9 @@ export function listItems(filters?: {
   color?: string;
   style?: string;
 }) {
+  const current = readItemsSync();
   const q = filters?.q?.toLowerCase().trim();
-  return items.filter((it) => {
+  return current.filter((it) => {
     if (filters?.category && it.category !== filters.category) return false;
     if (filters?.size && !it.sizes.includes(filters.size)) return false;
     if (filters?.color && it.color.toLowerCase() !== filters.color.toLowerCase()) return false;
@@ -144,7 +93,8 @@ export function listItems(filters?: {
 }
 
 export function getItem(id: number) {
-  return items.find((i) => i.id === id) ?? null;
+  const current = readItemsSync();
+  return current.find((i) => i.id === id) ?? null;
 }
 
 export function getItemRentals(itemId: number) {
@@ -181,18 +131,13 @@ export function cancelRental(id: string) {
 }
 
 // Funciones de ABM para items
-let nextItemId = Math.max(...items.map(i => i.id), 0) + 1;
-
 export function addItem(itemData: Omit<Item, 'id'>) {
   try {
-    const newItem: Item = {
-      id: nextItemId++,
-      ...itemData
-    };
-    
-    items.push(newItem);
-    // persist
-    try { saveItemsToFile(items); } catch (e) { /* handled in helper */ }
+    const current = readItemsSync();
+    const nextId = Math.max(...current.map(i => i.id), 0) + 1;
+    const newItem: Item = { id: nextId, ...itemData };
+    current.push(newItem);
+    saveItemsToFile(current);
     return { item: newItem };
   } catch (error) {
     return { error: "Failed to create item" as const };
@@ -200,45 +145,42 @@ export function addItem(itemData: Omit<Item, 'id'>) {
 }
 
 export function updateItem(id: number, updates: Partial<Omit<Item, 'id'>>) {
-  const index = items.findIndex(i => i.id === id);
+  const current = readItemsSync();
+  const index = current.findIndex(i => i.id === id);
   if (index === -1) return { error: "Item not found" as const };
-  
+
   // Verificar si el item tiene alquileres activos
   const activeRentals = getItemRentals(id);
   if (activeRentals.length > 0) {
     return { error: "Cannot update item with active rentals" as const };
   }
-  
+
   try {
-    items[index] = { ...items[index], ...updates };
-    try { saveItemsToFile(items); } catch (e) { /* handled in helper */ }
-    return { item: items[index] };
+    current[index] = { ...current[index], ...updates };
+    saveItemsToFile(current);
+    return { item: current[index] };
   } catch (error) {
     return { error: "Failed to update item" as const };
   }
 }
 
 export function deleteItem(id: number) {
-  const index = items.findIndex(i => i.id === id);
+  const current = readItemsSync();
+  const index = current.findIndex(i => i.id === id);
   if (index === -1) return { error: "Item not found" as const };
-  
+
   // Verificar si el item tiene alquileres activos
   const activeRentals = getItemRentals(id);
   if (activeRentals.length > 0) {
     return { error: "Cannot delete item with active rentals" as const };
   }
-  
+
   try {
-    const deletedItem = items[index];
-    items.splice(index, 1);
-    try { saveItemsToFile(items); } catch (e) { /* handled in helper */ }
+    const deletedItem = current[index];
+    current.splice(index, 1);
+    saveItemsToFile(current);
     return { item: deletedItem };
   } catch (error) {
     return { error: "Failed to delete item" as const };
   }
-}
-
-// Debug helper: return list of current item ids
-export function listItemIds() {
-  return items.map(i => i.id);
 }

@@ -52,6 +52,18 @@ export default function RentalForm({ itemId, csrf }: Props) {
       return;
     }
 
+    const dayDiff = (() => {
+        const [ys, ms, ds] = start.split("-").map(Number);
+        const [ye, me, de] = end.split("-").map(Number);
+        return (Date.UTC(ye, me - 1, de) - Date.UTC(ys, ms - 1, ds)) / (1000 * 60 * 60 * 24);
+    })();
+
+    if (dayDiff > 7) {
+        toast.error("Rental period cannot exceed 7 days.");
+        setLoading(false);
+        return;
+    }
+
     try {
       const res = await fetch("/api/rentals", {
         method: "POST",
