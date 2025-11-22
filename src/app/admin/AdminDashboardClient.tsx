@@ -281,19 +281,36 @@ export default function AdminDashboardClient() {
           body: JSON.stringify(formData)
         });
 
+        const payload = await response.json().catch(() => ({}));
         if (response.ok) {
-          const updatedItem = await response.json();
-          setItems(prev => prev.map(item => 
-            item.id === editingItem.id 
-              ? { ...item, ...updatedItem.item }
-              : item
-          ));
-          addToast({
-            type: 'success',
-            message: 'Artículo actualizado exitosamente'
-          });
+          // Re-fetch authoritative items list to keep client state in sync with the server
+          const itemsResp = await fetch('/api/items');
+          if (itemsResp.ok) {
+            const itemsData = await itemsResp.json();
+            const itemsArray = itemsData.items || itemsData || [];
+            // Map into the shape used by this component
+            const enriched = itemsArray.map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              category: item.category,
+              sizes: item.sizes || [],
+              pricePerDay: item.pricePerDay,
+              color: item.color,
+              style: item.style,
+              description: item.description || `${item.name} - ${item.color}`,
+              images: item.image ? [item.image] : [item.images?.[0] || '/images/placeholder.jpg'],
+              alt: item.alt || item.name,
+              activeRentals: 0,
+              upcomingRentals: 0,
+              isCurrentlyRented: false
+            }));
+            setItems(enriched);
+          }
+
+          addToast({ type: 'success', message: 'Artículo actualizado exitosamente' });
         } else {
-          throw new Error('Error al actualizar el artículo');
+          const msg = payload?.error || 'Error al actualizar el artículo';
+          throw new Error(msg);
         }
       } else {
         // Create new item
@@ -303,21 +320,35 @@ export default function AdminDashboardClient() {
           body: JSON.stringify(formData)
         });
 
+        const payload = await response.json().catch(() => ({}));
         if (response.ok) {
-          const result = await response.json();
-          const newItem = {
-            ...result.item,
-            activeRentals: 0,
-            upcomingRentals: 0,
-            isCurrentlyRented: false
-          };
-          setItems(prev => [...prev, newItem]);
-          addToast({
-            type: 'success',
-            message: 'Artículo creado exitosamente'
-          });
+          // Re-fetch authoritative items list so client sees server-assigned IDs
+          const itemsResp = await fetch('/api/items');
+          if (itemsResp.ok) {
+            const itemsData = await itemsResp.json();
+            const itemsArray = itemsData.items || itemsData || [];
+            const enriched = itemsArray.map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              category: item.category,
+              sizes: item.sizes || [],
+              pricePerDay: item.pricePerDay,
+              color: item.color,
+              style: item.style,
+              description: item.description || `${item.name} - ${item.color}`,
+              images: item.image ? [item.image] : [item.images?.[0] || '/images/placeholder.jpg'],
+              alt: item.alt || item.name,
+              activeRentals: 0,
+              upcomingRentals: 0,
+              isCurrentlyRented: false
+            }));
+            setItems(enriched);
+          }
+
+          addToast({ type: 'success', message: 'Artículo creado exitosamente' });
         } else {
-          throw new Error('Error al crear el artículo');
+          const msg = payload?.error || 'Error al crear el artículo';
+          throw new Error(msg);
         }
       }
       setIsItemModalOpen(false);
@@ -349,7 +380,35 @@ export default function AdminDashboardClient() {
           message: 'Artículo eliminado exitosamente'
         });
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Server delete error payload:', errorData);
+        // Attempt to re-sync client state with server in case of stale IDs
+        try {
+          const itemsResp = await fetch('/api/items');
+          if (itemsResp.ok) {
+            const itemsData = await itemsResp.json();
+            const itemsArray = itemsData.items || itemsData || [];
+            const enriched = itemsArray.map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              category: item.category,
+              sizes: item.sizes || [],
+              pricePerDay: item.pricePerDay,
+              color: item.color,
+              style: item.style,
+              description: item.description || `${item.name} - ${item.color}`,
+              images: item.image ? [item.image] : [item.images?.[0] || '/images/placeholder.jpg'],
+              alt: item.alt || item.name,
+              activeRentals: 0,
+              upcomingRentals: 0,
+              isCurrentlyRented: false
+            }));
+            setItems(enriched);
+          }
+        } catch (e) {
+          console.error('Failed to re-sync items after delete failure', e);
+        }
+
         throw new Error(errorData.error || 'Error al eliminar el artículo');
       }
     } catch (error) {
@@ -402,6 +461,8 @@ export default function AdminDashboardClient() {
   if (!isAuthenticated) {
     return null;
   }
+              console.log('Rendering item:', items)
+
 
   if (loading && items.length === 0) {
     return (
@@ -565,7 +626,6 @@ export default function AdminDashboardClient() {
                   )}
                 </div>
               </div>
-              
               <div className="p-4 flex flex-col flex-grow">
                 <div className="mb-3">
                   <h3 className="font-bold text-lg text line-clamp-2">{item.name}</h3>
@@ -575,15 +635,15 @@ export default function AdminDashboardClient() {
                 <div className="space-y-1 mb-2 flex-grow">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-400 font-medium">Category:</span>
-                    <span className="text-sm font-semibold text-white capitalize">{item.category}</span>
+                    <span className="text-sm font-semibold capitalize">{item.category}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-400 font-medium">Color:</span>
-                    <span className="text-sm font-semibold text-white capitalize">{item.color}</span>
+                    <span className="text-sm font-semibold capitalize">{item.color}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-400 font-medium">Sizes:</span>
-                    <span className="text-sm font-semibold text-white">{item.sizes.join(', ')}</span>
+                    <span className="text-sm font-semibold">{item.sizes.join(', ')}</span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-gray-700">
                     <span className="text-sm text-400 font-medium">Price/Day:</span>

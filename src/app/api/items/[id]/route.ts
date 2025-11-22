@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {getItem, updateItem, deleteItem} from "../../../../../lib/RentalManagementSystem";
+import {getItem, updateItem, deleteItem, listItemIds} from "../../../../../lib/RentalManagementSystem";
 
 export async function GET(request: Request, { params }: { params: any }) {
 const resolvedParams = await params;
@@ -66,7 +66,10 @@ export async function DELETE(request: Request, { params }: { params: any }) {
     const result = deleteItem(id);
     
     if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      // Include current item ids to help debug cases where client and server disagree
+      const ids = listItemIds();
+      console.error(`Delete failed for id=${id}. Current ids: ${ids.join(',')}`);
+      return NextResponse.json({ error: result.error, existingIds: ids }, { status: 400 });
     }
 
     return NextResponse.json({ success: true, message: "Item deleted successfully" });

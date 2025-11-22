@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface ItemFormProps {
   item?: {
@@ -45,6 +45,11 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
     images: item?.images || ['/images/placeholder.jpg']
   });
 
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleChange = (field: string, value: any) => {
@@ -73,10 +78,51 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
     if (formData.sizes.length === 0) newErrors.sizes = 'At least one size must be selected';
     if (!formData.color.trim()) newErrors.color = 'Color is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
+    if (!formData.images) newErrors.images = 'At least one image is required';
+    // Validate image path: must exist, be inside local `items` folder, and have image extension
+    const img = (formData.images && formData.images[0]) || '';
+    const isImageExt = (p: string) => /\.(jpe?g|png|gif|webp|svg)$/i.test(p.trim());
+    const isLocalDresses = (p: string) => /^\/?images\/dresses\//i.test(p.trim());
+    if (!img.trim()) newErrors.images = 'An image path is required';
+    else if (!isLocalDresses(img)) newErrors.images = 'Image must be inside the local `/images/dresses/` folder (e.g. /images/dresses/example.jpg)';
+    else if (!isImageExt(img)) newErrors.images = 'Image path must point to an image (jpg, png, gif, webp, svg)';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  // Upload helper: posts file to /api/upload and stores returned public path in formData.images[0]
+  const uploadFile = async (file: File) => {
+    setUploading(true);
+    try {
+      setSelectedFileName(file.name);
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Upload failed');
+      handleChange('images', [data.path]);
+      setPreviewUrl(data.path);
+      return data.path;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Sync preview when editing existing item or when formData.images changes
+  useEffect(() => {
+    const img = formData.images && formData.images[0];
+    if (img) {
+      setPreviewUrl(img);
+    }
+    return () => {
+      // revoke object URLs if any
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        try { URL.revokeObjectURL(previewUrl); } catch (e) { /* ignore */ }
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.images[0]]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -218,6 +264,53 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
           disabled={loading}
         />
         {errors.description && <p className="text-red-400 text-sm mt-1">{errors.description}</p>}
+      </div>
+
+      {/* Image path and upload */}
+      <div>
+        <label className="block text-sm font-semibold text-[#463f3a] mb-1">
+          Image path *
+        </label>
+        <div className="mt-2 flex items-center gap-3 w-full">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              // show local preview while uploading
+              const localUrl = URL.createObjectURL(f);
+              setPreviewUrl(localUrl);
+              try {
+                await uploadFile(f);
+              } catch (err: any) {
+                setErrors(prev => ({ ...prev, images: err?.message || 'Upload failed' }));
+              }
+            }}
+            disabled={loading || uploading}
+            className='hidden'
+          />
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={loading || uploading}
+            className="px-4 py-2 rounded-full bg-[#e0afa0] text-[#463f3a] font-semibold hover:bg-[#c99286]"
+          >
+            {uploading ? 'Uploading…' : 'Choose image'}
+          </button>
+
+          <div className="flex-1 text-sm text-[#463f3a] truncate">
+            {selectedFileName || (formData.images && formData.images[0]) || 'No file selected'}
+          </div>
+        </div>
+        {previewUrl && (
+          <div className="mt-2">
+            <img src={previewUrl} alt="Preview" className="h-24 rounded-md object-cover" />
+          </div>
+        )}
+        {errors.images && <p className="text-red-400 text-sm mt-1">{errors.images}</p>}
       </div>
 
       {/* Botones */}

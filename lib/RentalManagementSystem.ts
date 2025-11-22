@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+
 export type Category = "dress" | "shoes" | "bag" | "jacket";
 
 export type Item = {
@@ -23,8 +26,8 @@ export type Rental = {
   status: "active" | "canceled";
 };
 
-// In-memory store for demo. Replace with a DB in production.
-const items: Item[] = [
+// In-memory store for demo. Persisted to `data/items.json` in project root.
+const DEFAULT_ITEMS: Item[] = [
   {
     id: 1,
     name: "Silk Evening Gown",
@@ -74,6 +77,48 @@ const items: Item[] = [
     alt: "Velvet cocktail dress in deep tones",
   },
 ];
+
+const DATA_DIR = path.join(process.cwd(), 'data');
+const ITEMS_FILE = path.join(DATA_DIR, 'items.json');
+
+function ensureDataDir() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  } catch (e) {
+    console.error('Failed creating data dir:', e);
+  }
+}
+
+function saveItemsToFile(itemsToSave: Item[]) {
+  try {
+    ensureDataDir();
+    fs.writeFileSync(ITEMS_FILE, JSON.stringify(itemsToSave, null, 2), { encoding: 'utf8' });
+  } catch (e) {
+    console.error('Failed to save items to file:', e);
+  }
+}
+
+function loadItemsFromFile(): Item[] {
+  try {
+    if (fs.existsSync(ITEMS_FILE)) {
+      const raw = fs.readFileSync(ITEMS_FILE, { encoding: 'utf8' });
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed as Item[];
+    }
+  } catch (e) {
+    console.error('Failed to load items from file, falling back to defaults:', e);
+  }
+  // If missing or invalid, write defaults and return them
+  try {
+    ensureDataDir();
+    fs.writeFileSync(ITEMS_FILE, JSON.stringify(DEFAULT_ITEMS, null, 2), { encoding: 'utf8' });
+  } catch (e) {
+    console.error('Failed to write default items file:', e);
+  }
+  return DEFAULT_ITEMS.slice();
+}
+
+let items: Item[] = loadItemsFromFile();
 
 let rentals: Rental[] = [];
 
@@ -146,6 +191,8 @@ export function addItem(itemData: Omit<Item, 'id'>) {
     };
     
     items.push(newItem);
+    // persist
+    try { saveItemsToFile(items); } catch (e) { /* handled in helper */ }
     return { item: newItem };
   } catch (error) {
     return { error: "Failed to create item" as const };
@@ -164,6 +211,7 @@ export function updateItem(id: number, updates: Partial<Omit<Item, 'id'>>) {
   
   try {
     items[index] = { ...items[index], ...updates };
+    try { saveItemsToFile(items); } catch (e) { /* handled in helper */ }
     return { item: items[index] };
   } catch (error) {
     return { error: "Failed to update item" as const };
@@ -183,8 +231,14 @@ export function deleteItem(id: number) {
   try {
     const deletedItem = items[index];
     items.splice(index, 1);
+    try { saveItemsToFile(items); } catch (e) { /* handled in helper */ }
     return { item: deletedItem };
   } catch (error) {
     return { error: "Failed to delete item" as const };
   }
+}
+
+// Debug helper: return list of current item ids
+export function listItemIds() {
+  return items.map(i => i.id);
 }
