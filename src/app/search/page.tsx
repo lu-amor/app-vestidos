@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import {listItems, type Category} from "../../../lib/RentalManagementSystem";
+import { listItems, type Category } from "../../../lib/RentalManagementSystem";
 
 type SearchParams = {
     q?: string;
