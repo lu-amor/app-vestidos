@@ -1,0 +1,158 @@
+[
+  {
+    "itemId": 9,
+    "start": "2025-11-20",
+    "end": "2025-11-21",
+    "customer": {
+      "name": "Test Customer",
+      "email": "test@example.com",
+      "phone": "+34123456789"
+    },
+    "id": "f9e781f3-279f-46cd-85c2-e48c8990d577",
+    "createdAt": "2025-11-25T23:06:49.185Z",
+    "status": "active"
+  },
+  {
+    "itemId": 10,
+    "start": "2025-11-20",
+    "end": "2025-11-21",
+    "customer": {
+      "name": "Test Customer",
+      "email": "test@example.com",
+      "phone": "+34123456789"
+    },
+    "id": "2408643d-ddee-435f-bcaf-16b500156b46",
+    "createdAt": "2025-11-25T23:07:38.113Z",
+    "status": "canceled"
+  },
+  {
+    "itemId": 11,
+    "start": "2025-11-20",
+    "end": "2025-11-21",
+    "customer": {
+      "name": "Test Customer",
+      "email": "test@example.com",
+      "phone": "+34123456789"
+    },
+    "id": "b6acea3c-f7d8-4c13-91a0-4c3d7762c0df",
+    "createdAt": "2025-11-25T23:09:58.925Z",
+    "status": "canceled"
+  },
+  {
+    "itemId": 12,
+    "start": "2025-11-20",
+    "end": "2025-11-21",
+    "customer": {
+      "name": "Test Customer",
+      "email": "test@example.com",
+      "phone": "+34123456789"
+    },
+    "id": "952687ed-c797-4e46-90f3-128cc314d7a9",
+    "createdAt": "2025-11-25T23:10:48.600Z",
+    "status": "canceled"
+  },
+  {
+    "itemId": 13,
+    "start": "2025-11-20",
+    "end": "2025-11-21",
+    "customer": {
+      "name": "Test Customer",
+      "email": "test@example.com",
+      "phone": "+34123456789"
+    },
+    "id": "d815fde0-2b95-49ba-8955-c2ab300f2633",
+    "createdAt": "2025-11-25T23:11:21.023Z",
+    "status": "canceled"
+  },
+  {
+    "itemId": 14,
+    "start": "2025-11-20",
+    "end": "2025-11-21",
+    "customer": {
+      "name": "Test Customer",
+      "email": "test@example.com",
+      "phone": "+34123456789"
+    },
+    "id": "db76cc47-d0da-40ad-b6c5-0589b9f64af2",
+    "createdAt": "2025-11-25T23:12:07.817Z",
+    "status": "canceled"
+  },
+  {
+    "itemId": 15,
+    "start": "2025-11-20",
+    "end": "2025-11-21",
+    "customer": {
+      "name": "Test Customer",
+      "email": "test@example.com",
+      "phone": "+34123456789"
+    },
+    "id": "ae00daeb-ab53-4af3-83d9-ab0125b73b9d",
+    "createdAt": "2025-11-25T23:12:52.595Z",
+    "status": "canceled"
+  },
+  {
+    "itemId": 16,
+    "start": "2025-11-20",
+    "end": "2025-11-21",
+    "customer": {
+      "name": "Test Customer",
+      "email": "test@example.com",
+      "phone": "+34123456789"
+    },
+    "id": "8a32e94e-cdbc-4d93-85c7-00b98cdfe98d",
+    "createdAt": "2025-11-25T23:13:26.098Z",
+    "status": "canceled"
+  },
+  {
+    "itemId": 17,
+    "start": "2025-11-20",
+    "end": "2025-11-21",
+    "customer": {
+      "name": "Test Customer",
+      "email": "test@example.com",
+      "phone": "+34123456789"
+    },
+    "id": "6995d6f4-3948-4521-aaf0-5a883b17ea82",
+    "createdAt": "2025-11-25T23:14:41.687Z",
+    "status": "canceled"
+  },
+  {
+    "itemId": 18,
+    "start": "2025-11-20",
+    "end": "2025-11-21",
+    "customer": {
+      "name": "Test Customer",
+      "email": "test@example.com",
+      "phone": "+34123456789"
+    },
+    "id": "655c4de8-998b-48e8-9d85-5a19370605ca",
+    "createdAt": "2025-11-25T23:15:20.415Z",
+    "status": "canceled"
+  },
+  {
+    "itemId": 19,
+    "start": "2025-11-20",
+    "end": "2025-11-21",
+    "customer": {
+      "name": "Test Customer",
+      "email": "test@example.com",
+      "phone": "+34123456789"
+    },
+    "id": "1d1dd6bf-9104-45a1-9c49-9ede10b6fb53",
+    "createdAt": "2025-11-25T23:15:40.856Z",
+    "status": "canceled"
+  },
+  {
+    "itemId": 20,
+    "start": "2025-11-20",
+    "end": "2025-11-21",
+    "customer": {
+      "name": "Test Customer",
+      "email": "test@example.com",
+      "phone": "+34123456789"
+    },
+    "id": "a4da9af5-4dcc-4d51-9f11-cca131384152",
+    "createdAt": "2025-11-25T23:31:58.303Z",
+    "status": "canceled"
+  }
+]

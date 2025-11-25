@@ -131,6 +131,7 @@ export default function AdminDashboardClient() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [colorFilter, setColorFilter] = useState('all');
   const [availableColors, setAvailableColors] = useState<string[]>([]);
   const [newColor, setNewColor] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -146,6 +147,17 @@ export default function AdminDashboardClient() {
   // Double-check authentication on client side
   useEffect(() => {
     const checkAuth = async () => {
+          <select
+            value={colorFilter}
+            onChange={(e) => setColorFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-800"
+            data-testid="admin-color-select"
+          >
+            <option value="all">Todos los colores</option>
+            {availableColors.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
       try {
         const response = await fetch('/api/admin/rentals');
         if (response.status === 401) {
@@ -266,11 +278,27 @@ export default function AdminDashboardClient() {
       });
       
       if (response.ok) {
-        setRentals(prev => prev.map(r => 
-          r.id === rentalId ? { ...r, status: 'canceled' as const } : r
-        ));
-        // Refresh items to update rental counts
-        window.location.reload();
+        // Re-fetch rentals from server to ensure state is consistent and persisted
+        try {
+          const r = await fetch('/api/admin/rentals');
+          if (r.ok) {
+            const body = await r.json().catch(() => ({}));
+            const rentalsArray = body.rentals || body || [];
+            setRentals(rentalsArray);
+            // Also update items' rental flags based on fresh rentals
+            setItems(prevItems => {
+              const today = new Date().toISOString().split('T')[0];
+              return prevItems.map(it => {
+                const itemRentals = rentalsArray.filter((rr: Rental) => rr.itemId === it.id && rr.status === 'active');
+                const activeRentals = itemRentals.filter((r2: Rental) => r2.start <= today && r2.end >= today).length;
+                const upcomingRentals = itemRentals.filter((r2: Rental) => r2.start > today).length;
+                return { ...it, activeRentals, upcomingRentals, isCurrentlyRented: activeRentals > 0 };
+              });
+            });
+          }
+        } catch (e) {
+          console.error('Failed to refresh rentals after cancel:', e);
+        }
       }
     } catch (error) {
       console.error('Error cancelling rental:', error);
@@ -405,12 +433,13 @@ export default function AdminDashboardClient() {
                          (item.style?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+      const matchesColor = colorFilter === 'all' || (item.color || '').toLowerCase() === colorFilter.toLowerCase();
     
     const matchesStatus = statusFilter === 'all' || 
                          (statusFilter === 'available' && !item.isCurrentlyRented) ||
                          (statusFilter === 'rented' && item.isCurrentlyRented);
     
-    return matchesSearch && matchesCategory && matchesStatus;
+      return matchesSearch && matchesCategory && matchesStatus && matchesColor;
   });
 
   const activeRentals = rentals.filter(r => r.status === 'active');
@@ -429,47 +458,7 @@ export default function AdminDashboardClient() {
           </div>
         </div>
 
-          {/* Filter Catalog Management (Admin) */}
-          <div className="border border-gray-700 rounded-lg shadow-sm p-6 mt-6">
-            <h3 className="text-lg font-semibold mb-3">Catálogo de filtros</h3>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <div className="flex-1">
-                <label className="block text-sm text-400 mb-1">Colores disponibles</label>
-                <div className="flex flex-wrap gap-2">
-                  {availableColors.map((c) => (
-                    <span key={c} className="px-3 py-1 bg-gray-700 text-white rounded-full text-sm capitalize">{c}</span>
-                  ))}
-                </div>
-              </div>
-              <div className="w-full sm:w-auto flex items-center gap-2">
-                <input
-                  value={newColor}
-                  onChange={(e) => setNewColor(e.target.value)}
-                  placeholder="Nuevo color (ej. Verde lima)"
-                  className="px-3 py-2 border border-gray-600 rounded-lg bg-800"
-                />
-                <button
-                  onClick={async () => {
-                    try {
-                      const res = await fetch('/api/filters/colors', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ color: newColor }) });
-                      if (res.ok) {
-                        const d = await res.json();
-                        setAvailableColors(prev => [...prev, d.color]);
-                        setNewColor('');
-                        addToast({ type: 'success', message: 'Color agregado' });
-                      } else {
-                        const err = await res.json();
-                        addToast({ type: 'error', message: err.error || 'Error' });
-                      }
-                    } catch (e) {
-                      addToast({ type: 'error', message: 'Error al guardar color' });
-                    }
-                  }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-                >Agregar</button>
-              </div>
-            </div>
-          </div>
+          
       </div>
     );
   }
@@ -506,6 +495,91 @@ export default function AdminDashboardClient() {
         >
           Cerrar sesión
         </button>
+      </div>
+
+      {/* Filter Catalog Management (Admin) */}
+      <div className="border border-gray-700 rounded-lg shadow-sm p-6 mt-6">
+        <h3 className="text-lg font-semibold mb-3">Catálogo de colores</h3>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex-1">
+            <label className="block text-sm text-400 mb-1">Colores disponibles</label>
+            <div className="flex flex-wrap gap-2">
+              {availableColors.map((c) => (
+                <div key={c} className="relative inline-flex items-center">
+                  <span data-testid={`color-chip-${c}`} className="px-3 py-1 bg-gray-700 text-white rounded-full text-sm capitalize">{c}</span>
+                  <button
+                    aria-label={`Eliminar ${c}`}
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/api/filters/colors', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ color: c }) });
+                        if (res.ok) {
+                          setAvailableColors(prev => prev.filter(x => x.toLowerCase() !== c.toLowerCase()));
+                          addToast({ type: 'success', message: `Color ${c} eliminado` });
+                        } else {
+                          const err = await res.json().catch(() => ({}));
+                          addToast({ type: 'error', message: err.error || 'Error eliminando color' });
+                        }
+                      } catch (e) {
+                        addToast({ type: 'error', message: 'Error eliminando color' });
+                      }
+                    }}
+                    className="-ml-2 -mr-2 p-1 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs"
+                    title={`Eliminar ${c}`}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="w-full sm:w-auto flex items-center gap-2">
+            <input
+              value={newColor}
+              onChange={(e) => setNewColor(e.target.value)}
+              placeholder="Nuevo color"
+              className="px-3 py-2 border border-gray-600 rounded-lg bg-800"
+              data-testid="admin-new-color-input"
+            />
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/filters/colors', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ color: newColor }) });
+                  if (res.ok) {
+                    const d = await res.json();
+                    setAvailableColors(prev => [...prev, d.color]);
+                    setNewColor('');
+                    addToast({ type: 'success', message: 'Color agregado' });
+                  } else {
+                    const err = await res.json();
+                    addToast({ type: 'error', message: err.error || 'Error' });
+                  }
+                } catch (e) {
+                  addToast({ type: 'error', message: 'Error al guardar color' });
+                }
+              }}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+              data-testid="admin-add-color-btn"
+            >Agregar</button>
+            <button
+              onClick={async () => {
+                try {
+                  const r = await fetch('/api/filters/colors');
+                  if (r.ok) {
+                    const d = await r.json();
+                    setAvailableColors(d.colors || []);
+                    addToast({ type: 'success', message: 'Colores actualizados' });
+                  } else {
+                    addToast({ type: 'error', message: 'No se pudieron actualizar los colores' });
+                  }
+                } catch (e) {
+                  addToast({ type: 'error', message: 'Error al obtener colores' });
+                }
+              }}
+              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
+              data-testid="admin-refresh-colors-btn"
+            >Actualizar</button>
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -577,12 +651,14 @@ export default function AdminDashboardClient() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-800 placeholder-gray-400"
+              data-testid="admin-search-input"
             />
           </div>
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-800"
+            data-testid="admin-category-select"
           >
             <option value="all">Todas las categorías</option>
             <option value="dress">Vestidos</option>
@@ -590,10 +666,24 @@ export default function AdminDashboardClient() {
             <option value="bag">Bolsos</option>
             <option value="jacket">Chaquetas</option>
           </select>
+
+          <select
+            value={colorFilter}
+            onChange={(e) => setColorFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-800"
+            data-testid="admin-color-select"
+          >
+            <option value="all">Todos los colores</option>
+            {availableColors.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-800"
+            data-testid="admin-status-select"
           >
             <option value="all">Todos los estados</option>
             <option value="available">Disponible</option>

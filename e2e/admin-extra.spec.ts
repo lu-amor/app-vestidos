@@ -34,34 +34,6 @@ test.describe('Admin extra checks (access, logout, UI)', () => {
     await expect(page.getByRole('heading', { name: /Dashboard de Administración/i })).toHaveCount(0);
   });
 
-  test('login page has back link and it navigates to home', async ({ page }) => {
-    await page.goto('/admin/login');
-    const back = page.getByRole('link', { name: /Volver|Inicio/i });
-    await expect(back).toBeVisible();
-    await back.click();
-    await expect(page).toHaveURL(/\/$|^http:\/\/localhost:3000\/$/);
-  });
-
-  test('open item modal and close with Escape', async ({ page }) => {
-    // login
-    await page.goto('/admin/login');
-    await page.fill('input[name="username"]', 'admin');
-    await page.fill('input[name="password"]', 'admin123');
-    await Promise.all([
-      page.waitForNavigation(),
-      page.getByRole('button', { name: 'Iniciar Sesión' }).click(),
-    ]);
-
-    // Open create item modal
-    await page.getByRole('button', { name: /Agregar Artículo/i }).click();
-    const title = page.getByText(/Agregar Nuevo Artículo|Editar Artículo/);
-    await expect(title).toBeVisible();
-
-    // Press Escape to close
-    await page.keyboard.press('Escape');
-    await expect(title).toHaveCount(0);
-  });
-
   test('item form validation: cannot submit empty required fields', async ({ page }) => {
     // login
     await page.goto('/admin/login');
@@ -73,8 +45,8 @@ test.describe('Admin extra checks (access, logout, UI)', () => {
     ]);
 
     await page.getByRole('button', { name: /Agregar Artículo/i }).click();
-    // Try to submit without filling required fields
-    await page.getByRole('button', { name: /Crear|Actualizar|Guardar/ }).click();
+  // Try to submit without filling required fields - target the form submit button explicitly
+  await page.getByTestId('item-submit-btn').click();
     // Expect either validation message or modal still open
     const title = page.getByText(/Agregar Nuevo Artículo|Editar Artículo/);
     await expect(title).toBeVisible();

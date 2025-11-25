@@ -32,39 +32,62 @@ test.describe('Admin flows', () => {
     ]);
     // Seed data: create an item via authenticated request, then create a rental
     // Use page.request with the current page context so cookies are forwarded
-    const itemResp = await page.request.post('/api/items', {
-      data: {
-        name: 'Seed Test Item ' + Date.now(),
-        category: 'dress',
-        pricePerDay: 10,
-        sizes: ['S','M'],
-        color: 'black'
-      }
-    });
-    const itemJson = await itemResp.json();
-    const createdItemId = itemJson?.item?.id;
-
-    // create rental via public API (requires csrf token; use /api/rentals via form-like POST)
-    // The simplest approach is to call the server-side helper route directly if available
-    // Fallback: emulate creating a rental by calling the admin rentals POST endpoint if exists
-    const rentalResp = await page.request.post('/api/rentals', {
-      form: {
-        itemId: String(createdItemId),
-        name: 'Test Customer',
-        email: 'test@example.com',
-        phone: '+34123456789',
-        start: '2025-11-20',
-        end: '2025-11-21',
-        csrf: 'test-csrf'
-      }
+    // Use admin seed endpoint to atomically create an item and a rental
+    const seedResult = await page.evaluate(async () => {
+      const res = await fetch('/api/admin/seed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}), credentials: 'same-origin' });
+      const body = await res.json().catch(() => null);
+      return { ok: res.ok, status: res.status, body };
     });
 
-    // Refresh dashboard and click first Cancel button
+    console.log('Seed result:', seedResult);
+
+    if (!seedResult.ok) console.log('Seed failed', seedResult);
+    expect(seedResult.ok).toBeTruthy();
+    const createdItemId = seedResult.body?.item?.id;
+    const createdRentalId = seedResult.body?.rental?.id;
+
+    // Refresh dashboard and click Cancel for the specific seeded rental row
     await page.goto('/admin');
-    const cancelBtns = page.getByRole('button', { name: 'Cancelar' });
-    await expect(cancelBtns.first()).toBeVisible();
-    await cancelBtns.first().click();
-    // After cancelling, the UI should show 'Cancelado' for that row or the button disappears
-    await expect(page.getByText('Cancelado').first()).toBeVisible();
+    // Wait until the rentals API has been fetched and the seeded rental appears in the table
+    const idPrefix = createdRentalId ? createdRentalId.slice(0, 8) : null;
+    if (idPrefix) {
+      await page.waitForSelector(`table tr:has-text("${idPrefix}")`, { timeout: 5000 });
+      const row = page.locator('table tr', { hasText: idPrefix }).first();
+      await expect(row.getByRole('button', { name: 'Cancelar' })).toBeVisible();
+      const [cancelResp] = await Promise.all([
+        page.waitForResponse(r => r.url().includes('/api/admin/rentals') && r.request().method() === 'POST'),
+        row.getByRole('button', { name: 'Cancelar' }).click(),
+      ]);
+      if (!cancelResp.ok()) {
+        const txt = await cancelResp.text().catch(() => '');
+        throw new Error(`Cancel POST failed: ${cancelResp.status()} - ${txt}`);
+      }
+
+      // Verify server-side state: fetch rentals and ensure the created rental is canceled
+      const after = await page.evaluate(async (rid) => {
+        const r = await fetch('/api/admin/rentals', { method: 'GET', credentials: 'same-origin' });
+        const body = await r.json().catch(() => null);
+        return { ok: r.ok, body };
+      }, createdRentalId);
+      if (!after.ok) throw new Error('Failed to fetch rentals after cancel');
+      const found = after.body?.rentals?.find((x: any) => x.id === createdRentalId);
+      if (!found) throw new Error('Seeded rental not found in rentals after cancel');
+      if (found.status !== 'canceled') throw new Error(`Expected rental status 'canceled' but got '${found.status}'`);
+    } else {
+      // Fallback: click the first available Cancel button (older behavior)
+      const cancelBtns = page.getByRole('button', { name: 'Cancelar' });
+      await expect(cancelBtns.first()).toBeVisible();
+      const [cancelResp] = await Promise.all([
+        page.waitForResponse(r => r.url().includes('/api/admin/rentals') && r.request().method() === 'POST'),
+        cancelBtns.first().click(),
+      ]);
+      if (!cancelResp.ok()) {
+        const txt = await cancelResp.text().catch(() => '');
+        throw new Error(`Cancel POST failed: ${cancelResp.status()} - ${txt}`);
+      }
+    }
+
+    // Server-side verification already confirms the seeded rental status is 'canceled'.
+    // We avoid relying on UI text rendering here to keep the test stable under parallel runs.
   });
 });

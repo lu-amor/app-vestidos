@@ -10,38 +10,53 @@ test('admin adds new color and public catalog shows it', async ({ page }) => {
     page.getByRole('button', { name: 'Iniciar Sesión' }).click(),
   ]);
 
-  // Go to admin and add color
+  // Go to admin and add color via the UI
   await page.goto('/admin');
-  await expect(page.getByText('Catálogo de filtros')).toBeVisible();
-  // Use authenticated request to add the color directly (ensures cookie forwarding)
-  // Use the page's context request to ensure cookies/session are forwarded
-  const addResp = await page.context().request.post('/api/filters/colors', {
-    data: { color: 'Verde lima' }
-  });
-  if (!addResp.ok()) {
-    const bodyText = await addResp.text();
-    let body = {};
-    try { body = JSON.parse(bodyText); } catch(e) {}
-    // If it's already exists, treat it as OK for idempotency in tests
-    if (addResp.status() === 400 && (body as any).error === 'Already exists') {
-      // proceed
-    } else {
-      console.error('Add color failed', addResp.status(), bodyText);
-      expect(addResp.ok()).toBeTruthy();
-    }
-  }
+  // Wait for admin colors panel - target the heading specifically to avoid ambiguous matches
+  await expect(page.getByRole('heading', { name: /Catálogo de colores|Catálogo de filtros/ })).toBeVisible();
 
-  // Reload admin UI to show updated catalog
-  await page.goto('/admin');
-  // verify API contains the new color
-  const listResp = await page.request.get('/api/filters/colors');
-  const listJson = await listResp.json();
-  // case-insensitive check
-  const colorsLower = (listJson.colors || []).map((c: string) => c.toLowerCase());
-  if (!colorsLower.includes('verde lima')) {
-    console.log('API colors:', listJson.colors);
+  const newColor = 'Verde lima';
+  await page.fill('[data-testid="admin-new-color-input"]', newColor);
+  // Trigger the Add button via page.evaluate to avoid transient detaches
+  await page.evaluate(() => {
+    const btn = document.querySelector('[data-testid="admin-add-color-btn"]') as HTMLButtonElement | null;
+    if (btn) btn.click();
+  });
+
+  // Poll the API until the new color appears (up to ~5s)
+  const maxAttempts = 25;
+  let foundInApi = false;
+  for (let i = 0; i < maxAttempts; i++) {
+    const resp = await page.request.get('/api/filters/colors');
+    const json = await resp.json().catch(() => ({}));
+    const colors = (json.colors || []).map((c: string) => c.toLowerCase());
+    if (colors.includes(newColor.toLowerCase())) {
+      foundInApi = true;
+      break;
+    }
+    await page.waitForTimeout(200);
   }
-  expect(colorsLower.includes('verde lima')).toBeTruthy();
+  expect(foundInApi).toBeTruthy();
+
+  // Click the refresh button to reload from server and update UI
+  await page.evaluate(() => {
+    const btn = document.querySelector('[data-testid="admin-refresh-colors-btn"]') as HTMLButtonElement | null;
+    if (btn) btn.click();
+  });
+
+  // Ensure the new color appears in the admin UI (poll DOM for stability)
+  const chipSelector = `[data-testid="color-chip-${newColor}"]`;
+  let chipVisible = false;
+  for (let i = 0; i < 25; i++) {
+    const count = await page.locator(chipSelector).count();
+    if (count > 0) { chipVisible = true; break; }
+    await page.waitForTimeout(200);
+  }
+  if (!chipVisible) {
+    const html = await page.locator('body').innerHTML();
+    console.log('Admin DOM snapshot (truncated):', html.slice(0, 3000));
+  }
+  expect(chipVisible).toBeTruthy();
 
   // Open public catalog and check dropdown (server-side rendered list)
   await page.goto('/search');
@@ -49,7 +64,7 @@ test('admin adds new color and public catalog shows it', async ({ page }) => {
   await expect(colorSelect).toBeVisible();
   // assert option exists (case-insensitive)
   const optionTexts = await colorSelect.locator('option').allTextContents();
-  const found = optionTexts.map(t => t.toLowerCase()).includes('verde lima');
+  const found = optionTexts.map(t => t.toLowerCase()).includes(newColor.toLowerCase());
   if (!found) {
     console.log('Select options:', optionTexts);
   }
