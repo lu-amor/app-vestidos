@@ -31,6 +31,7 @@ export default async function ItemDetail({ params }: { params: any }) {
                             href="/"
                             className="flex items-center gap-2 text-xs text-[#463f3a] dark:text-slate-300 hover:underline"
                             aria-label="Go to homepage"
+                            id="back-to-home"
                         >
                             <div className="py-4 w-4 flex items-center justify-center">
                                 <FontAwesomeIcon icon={faArrowLeft} size="sm" />
