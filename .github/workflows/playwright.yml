@@ -1,4 +1,3 @@
-yaml
 name: Pruebas Playwright
 on: [push, pull_request]
 jobs:
