@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface ItemFormProps {
   item?: {
@@ -29,7 +29,7 @@ const CATEGORIES = [
 const AVAILABLE_SIZES = {
   dress: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
   shoes: ['35', '36', '37', '38', '39', '40', '41', '42'],
-  bag: ['Mini', 'Pequeño', 'Mediano', 'Grande'],
+  bag: ['Mini', 'Small', 'Medium', 'Large'],
   jacket: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 };
 
@@ -44,6 +44,11 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
     description: item?.description || '',
     images: item?.images || ['/images/placeholder.jpg']
   });
+
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [availableColors, setAvailableColors] = useState<string[]>([]);
@@ -84,16 +89,57 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) newErrors.name = 'El nombre es requerido';
-    if (!formData.category) newErrors.category = 'La categoría es requerida';
-    if (formData.pricePerDay <= 0) newErrors.pricePerDay = 'El precio debe ser mayor a 0';
-    if (formData.sizes.length === 0) newErrors.sizes = 'Debe seleccionar al menos una talla';
-    if (!formData.color.trim()) newErrors.color = 'El color es requerido';
-    if (!formData.description.trim()) newErrors.description = 'La descripción es requerida';
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.category) newErrors.category = 'Category is required';
+    if (formData.pricePerDay <= 0) newErrors.pricePerDay = 'Price must be greater than 0';
+    if (formData.sizes.length === 0) newErrors.sizes = 'At least one size must be selected';
+    if (!formData.color.trim()) newErrors.color = 'Color is required';
+    if (!formData.description.trim()) newErrors.description = 'Description is required';
+    if (!formData.images) newErrors.images = 'At least one image is required';
+    // Validate image path: must exist, be inside local `items` folder, and have image extension
+    const img = (formData.images && formData.images[0]) || '';
+    const isImageExt = (p: string) => /\.(jpe?g|png|gif|webp|svg)$/i.test(p.trim());
+    const isLocalDresses = (p: string) => /^\/?images\/dresses\//i.test(p.trim());
+    if (!img.trim()) newErrors.images = 'An image path is required';
+    else if (!isLocalDresses(img)) newErrors.images = 'Image must be inside the local `/images/dresses/` folder (e.g. /images/dresses/example.jpg)';
+    else if (!isImageExt(img)) newErrors.images = 'Image path must point to an image (jpg, png, gif, webp, svg)';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  // Upload helper: posts file to /api/upload and stores returned public path in formData.images[0]
+  const uploadFile = async (file: File) => {
+    setUploading(true);
+    try {
+      setSelectedFileName(file.name);
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Upload failed');
+      handleChange('images', [data.path]);
+      setPreviewUrl(data.path);
+      return data.path;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Sync preview when editing existing item or when formData.images changes
+  useEffect(() => {
+    const img = formData.images && formData.images[0];
+    if (img) {
+      setPreviewUrl(img);
+    }
+    return () => {
+      // revoke object URLs if any
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        try { URL.revokeObjectURL(previewUrl); } catch (e) { /* ignore */ }
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.images[0]]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,16 +152,15 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Nombre */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          Nombre del Item *
+        <label className="block text-sm font-semibold text-[#463f3a] mb-1">
+          Item Name *
         </label>
         <input
           type="text"
           value={formData.name}
           onChange={(e) => handleChange('name', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white placeholder-gray-400"
+          className="w-full px-3 py-2 rounded-full bg-[#8a817c] text-white placeholder-white focus:outline-[#463f3a] focus:ring-2 focus:ring-[#463f3a]"
           placeholder="Ej: Vestido de noche elegante"
           disabled={loading}
         />
@@ -124,8 +169,8 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
 
       {/* Categoría */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          Categoría *
+        <label className="block text-sm font-semibold text-[#463f3a] mb-1">
+          Category *
         </label>
         <select
           value={formData.category}
@@ -134,8 +179,9 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
             // Reset sizes when category changes
             handleChange('sizes', []);
           }}
-          className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white"
+          className="w-full px-3 py-2 rounded-full bg-[#8a817c] text-white placeholder-white focus:outline-[#463f3a] focus:ring-2 focus:ring-[#463f3a]"
           disabled={loading}
+          style={{WebkitAppearance: 'none'}}
         >
           {CATEGORIES.map(cat => (
             <option key={cat.value} value={cat.value}>
@@ -148,45 +194,51 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
 
       {/* Precio */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          Precio por día ($) *
+        <label className="block text-sm font-semibold text-[#463f3a] mb-1">
+          Price per day ($) *
         </label>
         <input
-          type="number"
-          min="1"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
           value={formData.pricePerDay}
-          onChange={(e) => handleChange('pricePerDay', Number(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white"
+          onChange={(e) => {
+            const sanitized = e.target.value.replace(/[^\d.]/g, '');
+            handleChange('pricePerDay', sanitized === '' ? 0 : Number(sanitized));
+          }}
+          className="w-full px-3 py-2 rounded-full bg-[#8a817c] text-white placeholder-white focus:outline-[#463f3a] focus:ring-2 focus:ring-[#463f3a]"
           disabled={loading}
+          style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
         />
         {errors.pricePerDay && <p className="text-red-400 text-sm mt-1">{errors.pricePerDay}</p>}
       </div>
 
       {/* Tallas */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          Tallas disponibles *
+        <label className="block text-sm font-semibold text-[#463f3a] mb-1">
+          Available Sizes *
         </label>
-        <div className="grid grid-cols-3 gap-2">
-          {availableSizes.map(size => (
-            <label key={size} className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.sizes.includes(size)}
-                onChange={(e) => handleSizeChange(size, e.target.checked)}
-                className="rounded border-gray-600 text-blue-500 focus:ring-blue-500 bg-gray-800"
-                disabled={loading}
-              />
-              <span className="text-sm text-gray-300">{size}</span>
-            </label>
-          ))}
+        <div className={`grid gap-1 ${formData.category === 'bag' ? 'grid-cols-5' : 'grid-cols-10'}`}>
+            {availableSizes.map(size => (
+                <label key={size} className="flex items-center space-x-3">
+                    <input
+                        type="checkbox"
+                        checked={formData.sizes.includes(size)}
+                        onChange={(e) => handleSizeChange(size, e.target.checked)}
+                        className="rounded border-gray-600 bg-gray-800 focus:ring-2"
+                        style={{ width: 20, height: 20, accentColor: '#e0afa0'}}
+                        disabled={loading}
+                    />
+                    <span className="text-sm font-bold text-[#e0afa0]">{size}</span>
+                </label>
+            ))}
         </div>
         {errors.sizes && <p className="text-red-400 text-sm mt-1">{errors.sizes}</p>}
       </div>
 
       {/* Color (select from catalog) */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-semibold text-[#463f3a] mb-1">
           Color *
         </label>
         <select
@@ -206,14 +258,14 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
 
       {/* Estilo (opcional) */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          Estilo
+        <label className="block text-sm font-semibold text-[#463f3a] mb-1">
+          Style
         </label>
         <input
           type="text"
           value={formData.style}
           onChange={(e) => handleChange('style', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white placeholder-gray-400"
+          className="w-full px-3 py-2 rounded-full bg-[#8a817c] text-white placeholder-white focus:outline-[#463f3a] focus:ring-2 focus:ring-[#463f3a]"
           placeholder="Ej: Cocktail, Casual, Formal"
           disabled={loading}
         />
@@ -221,18 +273,65 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
 
       {/* Descripción */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          Descripción *
+        <label className="block text-sm font-semibold text-[#463f3a] mb-1">
+          Description *
         </label>
         <textarea
           value={formData.description}
           onChange={(e) => handleChange('description', e.target.value)}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white placeholder-gray-400"
+          className="w-full px-3 py-2 rounded-2xl bg-[#8a817c] text-white placeholder-white focus:outline-[#463f3a] focus:ring-2 focus:ring-[#463f3a]"
           placeholder="Describe el item, sus características y ocasiones de uso"
           disabled={loading}
         />
         {errors.description && <p className="text-red-400 text-sm mt-1">{errors.description}</p>}
+      </div>
+
+      {/* Image path and upload */}
+      <div>
+        <label className="block text-sm font-semibold text-[#463f3a] mb-1">
+          Image path *
+        </label>
+        <div className="mt-2 flex items-center gap-3 w-full">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              // show local preview while uploading
+              const localUrl = URL.createObjectURL(f);
+              setPreviewUrl(localUrl);
+              try {
+                await uploadFile(f);
+              } catch (err: any) {
+                setErrors(prev => ({ ...prev, images: err?.message || 'Upload failed' }));
+              }
+            }}
+            disabled={loading || uploading}
+            className='hidden'
+          />
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={loading || uploading}
+            className="px-4 py-2 rounded-full bg-[#e0afa0] text-[#463f3a] font-semibold hover:bg-[#c99286]"
+          >
+            {uploading ? 'Uploading…' : 'Choose image'}
+          </button>
+
+          <div className="flex-1 text-sm text-[#463f3a] truncate">
+            {selectedFileName || (formData.images && formData.images[0]) || 'No file selected'}
+          </div>
+        </div>
+        {previewUrl && (
+          <div className="mt-2">
+            <img src={previewUrl} alt="Preview" className="h-24 rounded-md object-cover" />
+          </div>
+        )}
+        {errors.images && <p className="text-red-400 text-sm mt-1">{errors.images}</p>}
       </div>
 
       {/* Botones */}
@@ -240,10 +339,10 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors"
+          className="px-4 py-2 text-[#463f3a] rounded-full bg-[#bcb8b1] font-semibold hover:bg-[#8a817c] transition-colors"
           disabled={loading}
         >
-          Cancelar
+          Cancel
         </button>
         <button
           type="submit"
@@ -251,7 +350,7 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           data-testid="item-submit-btn"
         >
-          {loading ? 'Guardando...' : (item ? 'Actualizar' : 'Crear')}
+          {loading ? 'Saving...' : (item ? 'Update' : 'Create')}
         </button>
       </div>
     </form>

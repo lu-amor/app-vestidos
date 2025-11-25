@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+
 export type Category = "dress" | "shoes" | "bag" | "jacket";
 
 export type Item = {
@@ -5,7 +8,7 @@ export type Item = {
   name: string;
   category: Category;
   pricePerDay: number;
-  sizes: string[]; // for shoes you can use "36-41"
+  sizes: string[];
   color: string;
   style?: string;
   description: string;
@@ -16,28 +19,33 @@ export type Item = {
 export type Rental = {
   id: string;
   itemId: number;
-  start: string; // ISO date (yyyy-mm-dd)
-  end: string;   // ISO date (yyyy-mm-dd)
+  start: string;
+  end: string;
   customer: { name: string; email: string; phone: string };
   createdAt: string;
   status: "active" | "canceled";
 };
 
-// File-backed store for demo items. This keeps items consistent across server handlers.
-import fs from 'fs';
-import path from 'path';
+// ----------------------------------------------------
+// Filesystem config
+// ----------------------------------------------------
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const ITEMS_FILE = path.join(DATA_DIR, 'items.json');
 const RENTALS_FILE = path.join(DATA_DIR, 'rentals.json');
+const COLORS_FILE = path.join(DATA_DIR, 'colors.json');
 
 function ensureDataDir() {
   try {
-    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   } catch (e) {
-    // ignore
+    console.error("Failed creating data directory", e);
   }
 }
+
+// ----------------------------------------------------
+// ITEMS persistence
+// ----------------------------------------------------
 
 function readItemsFile(): Item[] {
   try {
@@ -96,24 +104,28 @@ function readItemsFile(): Item[] {
       fs.writeFileSync(ITEMS_FILE, JSON.stringify(defaultItems, null, 2));
       return defaultItems;
     }
-    const raw = fs.readFileSync(ITEMS_FILE, 'utf-8');
+
+    const raw = fs.readFileSync(ITEMS_FILE, "utf-8");
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-    return [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
-    console.error('Failed to read items file', e);
+    console.error("Failed to read items", e);
     return [];
   }
 }
 
-function writeItemsFile(data: Item[]) {
+function writeItemsFile(items: Item[]) {
   try {
     ensureDataDir();
-    fs.writeFileSync(ITEMS_FILE, JSON.stringify(data, null, 2));
+    fs.writeFileSync(ITEMS_FILE, JSON.stringify(items, null, 2));
   } catch (e) {
-    console.error('Failed to write items file', e);
+    console.error("Failed to write items file", e);
   }
 }
+
+// ----------------------------------------------------
+// RENTALS persistence
+// ----------------------------------------------------
 
 function readRentalsFile(): Rental[] {
   try {
@@ -122,42 +134,40 @@ function readRentalsFile(): Rental[] {
       fs.writeFileSync(RENTALS_FILE, JSON.stringify([], null, 2));
       return [];
     }
-    const raw = fs.readFileSync(RENTALS_FILE, 'utf-8');
+    const raw = fs.readFileSync(RENTALS_FILE, "utf-8");
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-    return [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
-    console.error('Failed to read rentals file', e);
+    console.error("Failed to read rentals file", e);
     return [];
   }
 }
 
-function writeRentalsFile(data: Rental[]) {
+function writeRentalsFile(rentals: Rental[]) {
   try {
     ensureDataDir();
-    fs.writeFileSync(RENTALS_FILE, JSON.stringify(data, null, 2));
+    fs.writeFileSync(RENTALS_FILE, JSON.stringify(rentals, null, 2));
   } catch (e) {
-    console.error('Failed to write rentals file', e);
+    console.error("Failed to write rentals file", e);
   }
 }
 
-// File-backed catalog for filter options so state persists across serverless handlers
-const COLORS_FILE = path.join(DATA_DIR, 'colors.json');
+// ----------------------------------------------------
+// COLORS persistence
+// ----------------------------------------------------
 
 function readColorsFile(): string[] {
   try {
     if (!fs.existsSync(COLORS_FILE)) {
       ensureDataDir();
-      const defaultColors = ['Champagne', 'Black', 'Floral', 'Burgundy'];
+      const defaultColors = ["Champagne", "Black", "Floral", "Burgundy"];
       fs.writeFileSync(COLORS_FILE, JSON.stringify(defaultColors, null, 2));
       return defaultColors;
     }
-    const raw = fs.readFileSync(COLORS_FILE, 'utf-8');
+    const raw = fs.readFileSync(COLORS_FILE, "utf-8");
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-    return [];
-  } catch (e) {
-    console.error('Failed to read colors file', e);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
     return [];
   }
 }
@@ -167,7 +177,7 @@ function writeColorsFile(colors: string[]) {
     ensureDataDir();
     fs.writeFileSync(COLORS_FILE, JSON.stringify(colors, null, 2));
   } catch (e) {
-    console.error('Failed to write colors file', e);
+    console.error("Failed to write colors file", e);
   }
 }
 
@@ -176,27 +186,34 @@ export function listColors() {
 }
 
 export function addColorOption(color: string) {
-  const normalized = (color || '').toString().trim();
-  if (!normalized) return { error: 'Invalid color' as const };
+  const normalized = color.trim();
+  if (!normalized) return { error: "Invalid color" as const };
+
   const colors = readColorsFile();
-  if (colors.find(c => c.toLowerCase() === normalized.toLowerCase())) {
-    return { error: 'Already exists' as const };
-  }
+  if (colors.some((c) => c.toLowerCase() === normalized.toLowerCase()))
+    return { error: "Already exists" as const };
+
   colors.push(normalized);
   writeColorsFile(colors);
-  return { ok: true as const, color: normalized };
+  return { ok: true, color: normalized } as const;
 }
 
 export function removeColorOption(color: string) {
-  const normalized = (color || '').toString().trim();
-  if (!normalized) return { error: 'Invalid color' as const };
+  const normalized = color.trim();
+  if (!normalized) return { error: "Invalid color" as const };
+
   const colors = readColorsFile();
-  const idx = colors.findIndex(c => c.toLowerCase() === normalized.toLowerCase());
-  if (idx === -1) return { error: 'Not found' as const };
+  const idx = colors.findIndex((c) => c.toLowerCase() === normalized.toLowerCase());
+  if (idx === -1) return { error: "Not found" as const };
+
   colors.splice(idx, 1);
   writeColorsFile(colors);
-  return { ok: true as const, color: normalized };
+  return { ok: true, color: normalized } as const;
 }
+
+// ----------------------------------------------------
+// ITEM listing / filters
+// ----------------------------------------------------
 
 export function listItems(filters?: {
   q?: string;
@@ -205,16 +222,17 @@ export function listItems(filters?: {
   color?: string;
   style?: string;
 }) {
-  const q = filters?.q?.toLowerCase().trim();
   const items = readItemsFile();
+  const q = filters?.q?.toLowerCase().trim();
+
   return items.filter((it) => {
     if (filters?.category && it.category !== filters.category) return false;
     if (filters?.size && !it.sizes.includes(filters.size)) return false;
     if (filters?.color && it.color.toLowerCase() !== filters.color.toLowerCase()) return false;
     if (filters?.style && (it.style ?? "").toLowerCase() !== filters.style.toLowerCase()) return false;
     if (q) {
-      const hay = [it.name, it.color, it.style ?? "", it.category].join(" ").toLowerCase();
-      if (!hay.includes(q)) return false;
+      const haystack = [it.name, it.color, it.style ?? "", it.category].join(" ").toLowerCase();
+      if (!haystack.includes(q)) return false;
     }
     return true;
   });
@@ -240,82 +258,104 @@ export function isItemAvailable(itemId: number, start: string, end: string) {
 }
 
 export function createRental(data: Omit<Rental, "id" | "createdAt" | "status">) {
-  // Read current rentals and items
   const rentals = readRentalsFile();
   const items = readItemsFile();
-  // ensure item exists
-  if (!items.find(i => i.id === data.itemId)) return { error: 'Item not found' as const };
-  // check availability
-  const ok = rentals.every((r) => !(r.itemId === data.itemId && hasOverlap(data.start, data.end, r.start, r.end) && r.status === 'active'));
+
+  if (!items.find((i) => i.id === data.itemId))
+    return { error: "Item not found" as const };
+
+  const ok = rentals.every(
+    (r) =>
+      !(r.itemId === data.itemId &&
+        hasOverlap(data.start, data.end, r.start, r.end) &&
+        r.status === "active")
+  );
+
   if (!ok) return { error: "Item is not available for the selected dates." as const };
-  const id = crypto.randomUUID();
-  const rental: Rental = { ...data, id, createdAt: new Date().toISOString(), status: "active" };
+
+  const rental: Rental = {
+    ...data,
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+    status: "active",
+  };
+
   rentals.push(rental);
   writeRentalsFile(rentals);
+
   return { rental };
 }
 
 export function listRentals() {
-  const rentals = readRentalsFile();
-  return rentals.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return readRentalsFile().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export function cancelRental(id: string) {
   const rentals = readRentalsFile();
-  const idx = rentals.findIndex(x => x.id === id);
+  const idx = rentals.findIndex((x) => x.id === id);
   if (idx === -1) return { error: "Not found" as const };
-  rentals[idx].status = 'canceled';
+
+  rentals[idx].status = "canceled";
   writeRentalsFile(rentals);
+
   return { ok: true as const };
 }
 
-// Funciones de ABM para items
-export function addItem(itemData: Omit<Item, 'id'>) {
+// ----------------------------------------------------
+// CRUD: Items
+// ----------------------------------------------------
+
+export function addItem(itemData: Omit<Item, "id">) {
   try {
     const items = readItemsFile();
-    const nextId = (items.length === 0) ? 1 : (Math.max(...items.map(i => i.id)) + 1);
+    const nextId = items.length ? Math.max(...items.map((i) => i.id)) + 1 : 1;
+
     const newItem: Item = { id: nextId, ...itemData };
     items.push(newItem);
     writeItemsFile(items);
+
     return { item: newItem };
-  } catch (error) {
+  } catch {
     return { error: "Failed to create item" as const };
   }
 }
 
-export function updateItem(id: number, updates: Partial<Omit<Item, 'id'>>) {
+export function updateItem(
+  id: number,
+  updates: Partial<Omit<Item, "id">>
+) {
   const items = readItemsFile();
-  const index = items.findIndex(i => i.id === id);
-  if (index === -1) return { error: "Item not found" as const };
-  // Verificar si el item tiene alquileres activos
+  const index = items.findIndex((i) => i.id === id);
+  if (index === -1) return { error: "Item not found" };
+
   const activeRentals = getItemRentals(id);
-  if (activeRentals.length > 0) {
+  if (activeRentals.length > 0)
     return { error: "Cannot update item with active rentals" as const };
-  }
+
   try {
     items[index] = { ...items[index], ...updates };
     writeItemsFile(items);
     return { item: items[index] };
-  } catch (error) {
+  } catch {
     return { error: "Failed to update item" as const };
   }
 }
 
 export function deleteItem(id: number) {
   const items = readItemsFile();
-  const index = items.findIndex(i => i.id === id);
+  const index = items.findIndex((i) => i.id === id);
   if (index === -1) return { error: "Item not found" as const };
-  // Verificar si el item tiene alquileres activos
+
   const activeRentals = getItemRentals(id);
-  if (activeRentals.length > 0) {
+  if (activeRentals.length > 0)
     return { error: "Cannot delete item with active rentals" as const };
-  }
+
   try {
-    const deletedItem = items[index];
+    const deleted = items[index];
     items.splice(index, 1);
     writeItemsFile(items);
-    return { item: deletedItem };
-  } catch (error) {
+    return { item: deleted };
+  } catch {
     return { error: "Failed to delete item" as const };
   }
 }

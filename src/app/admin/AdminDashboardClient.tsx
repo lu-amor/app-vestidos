@@ -7,6 +7,8 @@ import Modal from '../../components/Modal';
 import ItemForm from '../../components/ItemForm';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { useToast } from '../../components/Toast';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {faShirt, faCircleCheck, faClock, faCalendar, faPlus, faPenToSquare, faTrash} from "@fortawesome/free-solid-svg-icons";
 
 type Item = {
   id: number;
@@ -101,32 +103,11 @@ const mockItems: ItemWithRentals[] = [
   }
 ];
 
-const mockRentals: Rental[] = [
-  {
-    id: "12345678-1234-1234-1234-123456789012",
-    itemId: 2,
-    start: "2025-11-10",
-    end: "2025-11-15",
-    customer: { name: "Ana García", email: "ana@email.com", phone: "+34 123 456 789" },
-    createdAt: "2025-11-09T10:00:00Z",
-    status: "active"
-  },
-  {
-    id: "87654321-4321-4321-4321-210987654321",
-    itemId: 1,
-    start: "2025-11-20",
-    end: "2025-11-25",
-    customer: { name: "María López", email: "maria@email.com", phone: "+34 987 654 321" },
-    createdAt: "2025-11-08T15:30:00Z",
-    status: "active"
-  }
-];
-
 export default function AdminDashboardClient() {
   const router = useRouter();
   const { addToast } = useToast();
   const [items, setItems] = useState<ItemWithRentals[]>(mockItems);
-  const [rentals, setRentals] = useState<Rental[]>(mockRentals);
+  const [rentals, setRentals] = useState<Rental[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -249,7 +230,6 @@ export default function AdminDashboardClient() {
         }
       } catch (error) {
         console.error('Error fetching data:', error);
-        // Keep using mock data on error
       } finally {
         setLoading(false);
       }
@@ -343,19 +323,36 @@ export default function AdminDashboardClient() {
           body: JSON.stringify(formData)
         });
 
+        const payload = await response.json().catch(() => ({}));
         if (response.ok) {
-          const updatedItem = await response.json();
-          setItems(prev => prev.map(item => 
-            item.id === editingItem.id 
-              ? { ...item, ...updatedItem.item }
-              : item
-          ));
-          addToast({
-            type: 'success',
-            message: 'Artículo actualizado exitosamente'
-          });
+          // Re-fetch authoritative items list to keep client state in sync with the server
+          const itemsResp = await fetch('/api/items');
+          if (itemsResp.ok) {
+            const itemsData = await itemsResp.json();
+            const itemsArray = itemsData.items || itemsData || [];
+            // Map into the shape used by this component
+            const enriched = itemsArray.map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              category: item.category,
+              sizes: item.sizes || [],
+              pricePerDay: item.pricePerDay,
+              color: item.color,
+              style: item.style,
+              description: item.description || `${item.name} - ${item.color}`,
+              images: item.image ? [item.image] : [item.images?.[0] || '/images/placeholder.jpg'],
+              alt: item.alt || item.name,
+              activeRentals: 0,
+              upcomingRentals: 0,
+              isCurrentlyRented: false
+            }));
+            setItems(enriched);
+          }
+
+          addToast({ type: 'success', message: 'Artículo actualizado exitosamente' });
         } else {
-          throw new Error('Error al actualizar el artículo');
+          const msg = payload?.error || 'Error al actualizar el artículo';
+          throw new Error(msg);
         }
       } else {
         // Create new item
@@ -365,21 +362,35 @@ export default function AdminDashboardClient() {
           body: JSON.stringify(formData)
         });
 
+        const payload = await response.json().catch(() => ({}));
         if (response.ok) {
-          const result = await response.json();
-          const newItem = {
-            ...result.item,
-            activeRentals: 0,
-            upcomingRentals: 0,
-            isCurrentlyRented: false
-          };
-          setItems(prev => [...prev, newItem]);
-          addToast({
-            type: 'success',
-            message: 'Artículo creado exitosamente'
-          });
+          // Re-fetch authoritative items list so client sees server-assigned IDs
+          const itemsResp = await fetch('/api/items');
+          if (itemsResp.ok) {
+            const itemsData = await itemsResp.json();
+            const itemsArray = itemsData.items || itemsData || [];
+            const enriched = itemsArray.map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              category: item.category,
+              sizes: item.sizes || [],
+              pricePerDay: item.pricePerDay,
+              color: item.color,
+              style: item.style,
+              description: item.description || `${item.name} - ${item.color}`,
+              images: item.image ? [item.image] : [item.images?.[0] || '/images/placeholder.jpg'],
+              alt: item.alt || item.name,
+              activeRentals: 0,
+              upcomingRentals: 0,
+              isCurrentlyRented: false
+            }));
+            setItems(enriched);
+          }
+
+          addToast({ type: 'success', message: 'Artículo creado exitosamente' });
         } else {
-          throw new Error('Error al crear el artículo');
+          const msg = payload?.error || 'Error al crear el artículo';
+          throw new Error(msg);
         }
       }
       setIsItemModalOpen(false);
@@ -411,7 +422,35 @@ export default function AdminDashboardClient() {
           message: 'Artículo eliminado exitosamente'
         });
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Server delete error payload:', errorData);
+        // Attempt to re-sync client state with server in case of stale IDs
+        try {
+          const itemsResp = await fetch('/api/items');
+          if (itemsResp.ok) {
+            const itemsData = await itemsResp.json();
+            const itemsArray = itemsData.items || itemsData || [];
+            const enriched = itemsArray.map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              category: item.category,
+              sizes: item.sizes || [],
+              pricePerDay: item.pricePerDay,
+              color: item.color,
+              style: item.style,
+              description: item.description || `${item.name} - ${item.color}`,
+              images: item.image ? [item.image] : [item.images?.[0] || '/images/placeholder.jpg'],
+              alt: item.alt || item.name,
+              activeRentals: 0,
+              upcomingRentals: 0,
+              isCurrentlyRented: false
+            }));
+            setItems(enriched);
+          }
+        } catch (e) {
+          console.error('Failed to re-sync items after delete failure', e);
+        }
+
         throw new Error(errorData.error || 'Error al eliminar el artículo');
       }
     } catch (error) {
@@ -467,6 +506,8 @@ export default function AdminDashboardClient() {
   if (!isAuthenticated) {
     return null;
   }
+              console.log('Rendering item:', items)
+
 
   if (loading && items.length === 0) {
     return (
@@ -486,14 +527,14 @@ export default function AdminDashboardClient() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard de Administración</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-1">Gestiona tu inventario y alquileres</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-1">Manage your inventory and rentals</p>
         </div>
         <button 
           onClick={handleLogout}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+          className="bg-[#463f3a] hover:bg-[#3a352f] text-white font-semibold px-6 py-2 rounded-full transition-colors"
         >
-          Cerrar sesión
+          Log Out
         </button>
       </div>
 
@@ -583,58 +624,50 @@ export default function AdminDashboardClient() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
-        <div className="border border-gray-700 rounded-lg shadow-sm p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-500 rounded-lg">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
+        <div className="bg-[#e0afa0]/50 rounded-4xl shadow-sm p-6">
+          <div className="flex items-start">
+            <div className="p-3 bg-[#8a817c] rounded-lg">
+                <FontAwesomeIcon icon={faShirt} className="text-white" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-400">Total Items</p>
+              <p className="text-sm font-semibold text-400">Total Items</p>
               <p className="text-2xl font-bold">{items.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="border border-gray-700 rounded-lg shadow-sm p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-500 rounded-lg">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+        <div className="bg-[#e0afa0]/50 rounded-4xl shadow-sm p-6">
+          <div className="flex items-start">
+            <div className="p-3 bg-[#8a817c] rounded-lg">
+                <FontAwesomeIcon icon={faCircleCheck} className="text-white" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-400">Disponibles</p>
+              <p className="text-sm font-semibold text-400">Available Items</p>
               <p className="text-2xl font-bold text">{items.filter(i => !i.isCurrentlyRented).length}</p>
             </div>
           </div>
         </div>
 
-        <div className="border border-gray-700 rounded-lg shadow-sm p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-orange-500 rounded-lg">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+        <div className="bg-[#e0afa0]/50 rounded-4xl shadow-sm p-6">
+          <div className="flex items-start">
+            <div className="p-3 bg-[#8a817c] rounded-lg">
+                <FontAwesomeIcon icon={faClock} className="text-white" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-400">Alquileres Activos</p>
+              <p className="text-sm font-semibold text-400">Active Rentals</p>
               <p className="text-2xl font-bold">{currentRentals.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="border border-gray-700 rounded-lg shadow-sm p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-500 rounded-lg">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+        <div className="bg-[#e0afa0]/50 rounded-4xl shadow-sm p-6">
+        <div className="flex items-start">
+            <div className="p-3 bg-[#8a817c] rounded-lg">
+                <FontAwesomeIcon icon={faCalendar} className="text-white" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-400">Próximos Alquileres</p>
+              <p className="text-sm font-semibold text-400">Upcoming Rentals</p>
               <p className="text-2xl font-bold">{upcomingRentals.length}</p>
             </div>
           </div>
@@ -642,12 +675,12 @@ export default function AdminDashboardClient() {
       </div>
 
       {/* Filters and Search */}
-      <div className="border border-gray-700 rounded-lg shadow-sm p-6 mt-8">
+      <div className="bg-[#bcb8b1]/50 rounded-full shadow-sm p-5 mt-8">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <input
               type="text"
-              placeholder="Buscar por nombre, color o estilo..."
+              placeholder="Search by name, color, or style..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-800 placeholder-gray-400"
@@ -655,16 +688,17 @@ export default function AdminDashboardClient() {
             />
           </div>
           <select
+            id="categoryFilter"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-800"
             data-testid="admin-category-select"
           >
-            <option value="all">Todas las categorías</option>
-            <option value="dress">Vestidos</option>
-            <option value="shoes">Zapatos</option>
-            <option value="bag">Bolsos</option>
-            <option value="jacket">Chaquetas</option>
+            <option value="all">All categories</option> 
+            <option value="dress">Dresses</option>
+            <option value="shoes">Shoes</option>
+            <option value="bag">Bags</option>
+            <option value="jacket">Jackets</option>
           </select>
 
           <select
@@ -680,42 +714,41 @@ export default function AdminDashboardClient() {
           </select>
 
           <select
+            id="statusFilter"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-800"
             data-testid="admin-status-select"
           >
-            <option value="all">Todos los estados</option>
-            <option value="available">Disponible</option>
-            <option value="rented">Alquilado</option>
+            <option value="all">All statuses</option>
+            <option value="available">Available</option>
+            <option value="rented">Rented</option>
           </select>
         </div>
       </div>
 
       {/* Inventory Grid */}
       <section className="mt-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-900">Inventario</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold text-900">Inventory</h2>
           <div className="flex items-center gap-4">
             <span className="text-sm text-300">
-              {filteredItems.length} de {items.length} artículos
+              {filteredItems.length} of {items.length} items
             </span>
             <button
               onClick={handleAddItem}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors font-medium flex items-center gap-2"
+              className="bg-[#463f3a] hover:bg-[#3a342f] text-white px-4 py-2 rounded-full transition-colors font-medium flex items-center gap-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-              </svg>
-              Agregar Artículo
+            <FontAwesomeIcon icon={faPlus} />
+              Add Item
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredItems.map((item) => (
-            <div key={item.id} className="border border-gray-700 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
-              <div className="relative h-64 flex-shrink-0">
+            <div key={item.id} className="rounded-3xl shadow-sm overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
+              <div className="relative h-150 flex-shrink-0">
                 <img
                   src={item.images[0]}
                   alt={item.alt}
@@ -727,57 +760,51 @@ export default function AdminDashboardClient() {
                 />
                 <div className="absolute top-3 right-3">
                   {item.isCurrentlyRented ? (
-                    <span className="bg-red-900 text-red-100 text-xs font-semibold px-3 py-1 rounded-full border border-red-700 shadow-sm">
-                      Alquilado
+                    <span className="bg-[#463f3a] text-[#e0afa0] text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
+                      Rented
                     </span>
                   ) : (
-                    <span className="bg-green-900 text-green-100 text-xs font-semibold px-3 py-1 rounded-full border border-green-700 shadow-sm">
-                      Disponible
+                    <span className="bg-[#e0afa0] text-[#463f3a] text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
+                      Available
                     </span>
                   )}
                 </div>
-                <div className="absolute top-3 left-3">
-                  <span className="bg-gray-700 text-white text-xs font-medium px-3 py-1 rounded shadow-sm">
-                    ID: {item.id}
-                  </span>
-                </div>
               </div>
-              
               <div className="p-4 flex flex-col flex-grow">
                 <div className="mb-3">
-                  <h3 className="font-bold text-lg text mb-2 line-clamp-2">{item.name}</h3>
+                  <h3 className="font-bold text-lg text line-clamp-2">{item.name}</h3>
                   <p className="text-sm text-300 line-clamp-2">{item.description}</p>
                 </div>
                 
-                <div className="space-y-2 mb-4 flex-grow">
+                <div className="space-y-1 mb-2 flex-grow">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-400 font-medium">Categoría:</span>
-                    <span className="text-sm font-semibold text-white capitalize">{item.category}</span>
+                    <span className="text-sm text-400 font-medium">Category:</span>
+                    <span className="text-sm font-semibold capitalize">{item.category}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-400 font-medium">Color:</span>
-                    <span className="text-sm font-semibold text-white capitalize">{item.color}</span>
+                    <span className="text-sm font-semibold capitalize">{item.color}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-400 font-medium">Tallas:</span>
-                    <span className="text-sm font-semibold text-white">{item.sizes.join(', ')}</span>
+                    <span className="text-sm text-400 font-medium">Sizes:</span>
+                    <span className="text-sm font-semibold">{item.sizes.join(', ')}</span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-gray-700">
-                    <span className="text-sm text-400 font-medium">Precio/día:</span>
-                    <span className="text-xl font-bold text-blue-400">${item.pricePerDay}</span>
+                    <span className="text-sm text-400 font-medium">Price/Day:</span>
+                    <span className="text-xl font-bold">${item.pricePerDay}</span>
                   </div>
                 </div>
 
                 {/* Rental status indicators */}
-                <div className="flex flex-wrap gap-2 mt-auto mb-3">
+                <div className="flex flex-wrap gap-2 mt-auto mb-2">
                   {item.activeRentals > 0 && (
-                    <span className="bg-orange-900 text-orange-100 text-xs font-semibold px-2 py-1 rounded-full border border-orange-700">
-                      {item.activeRentals} activo{item.activeRentals > 1 ? 's' : ''}
+                    <span className="bg-[#463f3a] text-[#f4f3ee] text-xs font-semibold px-2 py-1 rounded-full">
+                      {item.activeRentals} active
                     </span>
                   )}
                   {item.upcomingRentals > 0 && (
-                    <span className="bg-blue-900 text-blue-100 text-xs font-semibold px-2 py-1 rounded-full border border-blue-700">
-                      {item.upcomingRentals} próximo{item.upcomingRentals > 1 ? 's' : ''}
+                    <span className="bg-[#e0afa0] text-[#463f3a] text-xs font-semibold px-2 py-1 rounded-full">
+                      {item.upcomingRentals} upcoming
                     </span>
                   )}
                 </div>
@@ -786,23 +813,18 @@ export default function AdminDashboardClient() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEditItem(item)}
-                    className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 py-2 px-3 rounded-full text-sm font-medium transition-colors flex items-center justify-center gap-2 bg-[#463f3a] text-[#f4f3ee]"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Editar
+                    <FontAwesomeIcon icon={faPenToSquare} className="text-[#f4f3ee]"/>
+                    Edit
                   </button>
                   <button
                     onClick={() => handleDeleteItem(item.id)}
                     disabled={item.isCurrentlyRented}
-                    className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                    title={item.isCurrentlyRented ? "No se puede eliminar: artículo actualmente alquilado" : "Eliminar artículo"}
+                    className="flex-1 py-2 px-3 rounded-full text-sm font-medium transition-colors flex items-center justify-center gap-2 bg-[#e0afa0] text-[#463f3a] disabled:cursor-not-allowed"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Eliminar
+                    <FontAwesomeIcon icon={faTrash} className="text-[#463f3a]"/>
+                    Delete
                   </button>
                 </div>
               </div>
@@ -813,42 +835,42 @@ export default function AdminDashboardClient() {
 
       {/* Rentals Section */}
       <section className="mt-12">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Alquileres Programados</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Rental information</h2>
         
-        <div className="border border-gray-700 rounded-lg shadow-sm overflow-hidden">
+        <div className="border border-[#8a817c]/50 rounded-3xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-700">
-              <thead className="bg-800">
+            <table className="min-w-full divide-y divide-[#8a817c]/50">
+              <thead className="bg-[#bcb8b1]/50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-300 uppercase tracking-wider">
-                    ID del Alquiler
+                    Rental ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-300 uppercase tracking-wider">
-                    Artículo
+                    Item
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-300 uppercase tracking-wider">
-                    Fechas
+                    Dates
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-300 uppercase tracking-wider">
-                    Cliente
+                    Customer
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-300 uppercase tracking-wider">
-                    Estado
+                    Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-300 uppercase tracking-wider">
-                    Acciones
+                    Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-700">
+              <tbody className="divide-y divide-[#8a817c]/50">
                 {rentals.map((rental) => {
                   const item = items.find(i => i.id === rental.itemId);
                   const isActive = rental.start <= todayDate && rental.end >= todayDate && rental.status === 'active';
                   const isFuture = rental.start > todayDate;
                   
                   return (
-                    <tr key={rental.id} className="hover:bg-gray-800">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                    <tr key={rental.id} className="hover:bg-[#8a817c]/20 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         {rental.id.slice(0, 8)}...
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
@@ -866,46 +888,55 @@ export default function AdminDashboardClient() {
                               />
                             </div>
                           )}
-                          <div>
-                            <div className="font-medium text-white">{item?.name || `Item ${rental.itemId}`}</div>
-                            <div className="text-xs text-gray-400">ID: {rental.itemId}</div>
-                          </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div>
-                          <div className="font-medium">{rental.start} → {rental.end}</div>
+                            <div>
+                                {(() => {
+                                    const fmt = (s: string) => {
+                                        const d = new Date(s);
+                                        if (isNaN(d.getTime())) return s;
+                                        const day = String(d.getDate()).padStart(2, '0');
+                                        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                                        const mon = months[d.getMonth()];
+                                        const year = String(d.getFullYear());
+                                        return `${day} ${mon} ${year}`;
+                                    };
+                                    return `${fmt(rental.start)} → ${fmt(rental.end)}`;
+                                })()}
+                            </div>
                           <div className="text-xs">
-                            {isActive && <span className="text-orange-400 font-semibold">● En curso</span>}
-                            {isFuture && <span className="text-blue-400 font-semibold">● Próximo</span>}
+                            {isActive && <span className="text-[#463f3a] font-semibold">● Active</span>}
+                            {isFuture && <span className="text-[#ad7a6a] font-semibold">● Upcoming</span>}
                             {!isActive && !isFuture && rental.status === 'active' && <span className="text-gray-400">● Terminado</span>}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div>
-                          <div className="font-medium text-white">{rental.customer.name}</div>
+                          <div className="font-medium">{rental.customer.name}</div>
                           <div className="text-xs text-gray-400">
                             {rental.customer.email} • {rental.customer.phone}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        <span className={`inline-flex px-2 py-1 text-sm font-semibold rounded-full ${
                           rental.status === 'active' 
-                            ? 'bg-green-900 text-green-100 border border-green-700' 
-                            : 'bg-red-900 text-red-100 border border-red-700'
+                            ? 'bg-[#463f3a] text-[#e0afa0] border border-green-700' 
+                            : 'bg-[#bcb8b1] text-[#463f3a]'
                         }`}>
-                          {rental.status === 'active' ? 'Activo' : 'Cancelado'}
+                          {rental.status === 'active' ? 'Active' : 'Cancelled'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                         {rental.status === "active" ? (
                           <button
                             onClick={() => handleCancelRental(rental.id)}
-                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                            className="bg-[#e0afa0] text-[#463f3a] px-3 py-1 rounded-full text-sm font-medium transition-colors"
                           >
-                            Cancelar
+                            Cancel
                           </button>
                         ) : (
                           <span className="text-gray-400">—</span>
@@ -917,7 +948,7 @@ export default function AdminDashboardClient() {
                 {rentals.length === 0 && (
                   <tr>
                     <td className="px-6 py-8 text-center text-gray-400" colSpan={6}>
-                      No hay alquileres programados todavía.
+                      No rentals found.
                     </td>
                   </tr>
                 )}
@@ -931,7 +962,7 @@ export default function AdminDashboardClient() {
       <Modal
         isOpen={isItemModalOpen}
         onClose={() => !operationLoading && setIsItemModalOpen(false)}
-        title={editingItem ? 'Editar Artículo' : 'Agregar Nuevo Artículo'}
+        title={editingItem ? 'Update Item' : 'Add New Item'}
         maxWidth="lg"
       >
         <ItemForm

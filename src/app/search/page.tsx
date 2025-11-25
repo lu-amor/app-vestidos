@@ -3,13 +3,13 @@ import Image from "next/image";
 import {listItems, listColors, type Category} from "../../../lib/RentalManagementSystem";
 
 type SearchParams = {
-  q?: string;
-  category?: Category | "";
-  size?: string;
-  color?: string;
-  style?: string;
-  start?: string;
-  end?: string;
+    q?: string;
+    category?: Category | "";
+    size?: string;
+    color?: string;
+    style?: string;
+    start?: string;
+    end?: string;
 };
 
 export default function Page({ searchParams }: { searchParams: any }) {

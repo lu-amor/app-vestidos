@@ -22,20 +22,13 @@ export default function ConfirmDialog({
   message,
   confirmText = 'Confirmar',
   cancelText = 'Cancelar',
-  confirmButtonColor = 'red',
   loading = false
 }: ConfirmDialogProps) {
-  
-  const buttonColorClasses = {
-    red: 'bg-red-600 hover:bg-red-700',
-    blue: 'bg-blue-600 hover:bg-blue-700',
-    green: 'bg-green-600 hover:bg-green-700'
-  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="sm">
       <div className="space-y-4">
-        <p className="text-gray-300">
+        <p className="text-[#463f3a]">
           {message}
         </p>
 
@@ -43,7 +36,7 @@ export default function ConfirmDialog({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-800 transition-colors"
+            className="px-4 py-2 text-[#463f3a] rounded-full bg-[#bcb8b1] font-semibold hover:bg-[#8a817c] transition-colors"
             disabled={loading}
           >
             {cancelText}
@@ -52,7 +45,7 @@ export default function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className={`px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${buttonColorClasses[confirmButtonColor]}`}
+            className="px-4 py-2 text-[#463f3a] rounded-full bg-[#e0afa0] font-semibold hover:bg-[#463f3a] hover:text-[#f4f3ee] transition-colors"
           >
             {loading ? 'Procesando...' : confirmText}
           </button>
