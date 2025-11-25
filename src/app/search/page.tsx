@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import {listItems, type Category} from "../../../lib/RentalManagementSystem";
+import {listItems, listColors, type Category} from "../../../lib/RentalManagementSystem";
 
 type SearchParams = {
   q?: string;
@@ -14,6 +14,7 @@ type SearchParams = {
 
 export default function Page({ searchParams }: { searchParams: any }) {
   const { q = "", category = "", size = "", color = "", style = "" } = searchParams || {};
+  const colors = listColors();
   const items = listItems({
     q,
     category: category || undefined,
@@ -35,7 +36,12 @@ export default function Page({ searchParams }: { searchParams: any }) {
           <option value="jacket">Jackets</option>
         </select>
         <input name="size" defaultValue={size} placeholder="Size" className="rounded-xl border px-3 py-2 text-sm" />
-        <input name="color" defaultValue={color} placeholder="Color" className="rounded-xl border px-3 py-2 text-sm" />
+        <select name="color" defaultValue={color} className="rounded-xl border px-3 py-2 text-sm">
+          <option value="">All colors</option>
+          {colors.map(c => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
         <input name="style" defaultValue={style} placeholder="Style (e.g., cocktail)" className="rounded-xl border px-3 py-2 text-sm" />
         <button className="rounded-xl bg-fuchsia-600 text-white px-4 py-2 text-sm">Search</button>
       </form>

@@ -131,6 +131,8 @@ export default function AdminDashboardClient() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [availableColors, setAvailableColors] = useState<string[]>([]);
+  const [newColor, setNewColor] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   
@@ -165,6 +167,18 @@ export default function AdminDashboardClient() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+    // fetch available colors for admin catalog management
+    (async () => {
+      try {
+        const r = await fetch('/api/filters/colors');
+        if (r.ok) {
+          const d = await r.json();
+          setAvailableColors(d.colors || []);
+        }
+      } catch (e) {
+        console.error('Failed to fetch colors', e);
+      }
+    })();
     
     const fetchData = async () => {
       try {
@@ -414,6 +428,48 @@ export default function AdminDashboardClient() {
             <p className="mt-4 text-gray-300">Verificando acceso...</p>
           </div>
         </div>
+
+          {/* Filter Catalog Management (Admin) */}
+          <div className="border border-gray-700 rounded-lg shadow-sm p-6 mt-6">
+            <h3 className="text-lg font-semibold mb-3">Catálogo de filtros</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex-1">
+                <label className="block text-sm text-400 mb-1">Colores disponibles</label>
+                <div className="flex flex-wrap gap-2">
+                  {availableColors.map((c) => (
+                    <span key={c} className="px-3 py-1 bg-gray-700 text-white rounded-full text-sm capitalize">{c}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="w-full sm:w-auto flex items-center gap-2">
+                <input
+                  value={newColor}
+                  onChange={(e) => setNewColor(e.target.value)}
+                  placeholder="Nuevo color (ej. Verde lima)"
+                  className="px-3 py-2 border border-gray-600 rounded-lg bg-800"
+                />
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/filters/colors', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ color: newColor }) });
+                      if (res.ok) {
+                        const d = await res.json();
+                        setAvailableColors(prev => [...prev, d.color]);
+                        setNewColor('');
+                        addToast({ type: 'success', message: 'Color agregado' });
+                      } else {
+                        const err = await res.json();
+                        addToast({ type: 'error', message: err.error || 'Error' });
+                      }
+                    } catch (e) {
+                      addToast({ type: 'error', message: 'Error al guardar color' });
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                >Agregar</button>
+              </div>
+            </div>
+          </div>
       </div>
     );
   }

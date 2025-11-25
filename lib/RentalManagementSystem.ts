@@ -77,6 +77,64 @@ const items: Item[] = [
 
 let rentals: Rental[] = [];
 
+// File-backed catalog for filter options so state persists across serverless handlers
+import fs from 'fs';
+import path from 'path';
+
+const DATA_DIR = path.join(process.cwd(), 'data');
+const COLORS_FILE = path.join(DATA_DIR, 'colors.json');
+
+function ensureDataDir() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
+  } catch (e) {
+    // ignore
+  }
+}
+
+function readColorsFile(): string[] {
+  try {
+    if (!fs.existsSync(COLORS_FILE)) {
+      ensureDataDir();
+      const defaultColors = ['champagne', 'black', 'floral', 'burgundy'];
+      fs.writeFileSync(COLORS_FILE, JSON.stringify(defaultColors, null, 2));
+      return defaultColors;
+    }
+    const raw = fs.readFileSync(COLORS_FILE, 'utf-8');
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+    return [];
+  } catch (e) {
+    console.error('Failed to read colors file', e);
+    return [];
+  }
+}
+
+function writeColorsFile(colors: string[]) {
+  try {
+    ensureDataDir();
+    fs.writeFileSync(COLORS_FILE, JSON.stringify(colors, null, 2));
+  } catch (e) {
+    console.error('Failed to write colors file', e);
+  }
+}
+
+export function listColors() {
+  return readColorsFile();
+}
+
+export function addColorOption(color: string) {
+  const normalized = (color || '').toString().trim();
+  if (!normalized) return { error: 'Invalid color' as const };
+  const colors = readColorsFile();
+  if (colors.find(c => c.toLowerCase() === normalized.toLowerCase())) {
+    return { error: 'Already exists' as const };
+  }
+  colors.push(normalized);
+  writeColorsFile(colors);
+  return { ok: true as const, color: normalized };
+}
+
 export function listItems(filters?: {
   q?: string;
   category?: Category;
