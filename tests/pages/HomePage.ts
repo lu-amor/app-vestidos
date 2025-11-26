@@ -15,10 +15,6 @@ export class HomePage {
     async goto() : Promise<void> {
         await this.page.goto(appUrls.home)
     }
-
-    async navigateToAdmin() : Promise<void> {
-        await this.adminLink.click();
-    }
 }
 
 // Se añaden las definiciones de los elementos y los métodos correspondientes a acciones

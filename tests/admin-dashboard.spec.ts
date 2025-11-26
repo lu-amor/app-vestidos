@@ -7,7 +7,7 @@ test.describe('Admin dashboard - inventory grid', () => {
 
     await adminDashboard.expectDashboardVisible();
 
-    const expectedHeaders = ['ID', 'Name', 'Category', 'Sizes', 'Price/day'];
-    await adminDashboard.expectInventoryHeaders(expectedHeaders);
+    const expectedLabels = ['Category:', 'Color:', 'Sizes:', 'Price/Day:'];
+    await adminDashboard.expectInventoryHeaders(expectedLabels);
   });
 });

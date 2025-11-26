@@ -9,15 +9,13 @@ export class LoginPage {
 
     constructor(page: Page) {
         this.page = page;
-        this.usernameInput = page.getByRole('textbox', { name: 'Username' });
-        this.passwordInput = page.getByRole('textbox', { name: 'Password' });
-        this.signInButton = page.getByRole('button', { name: 'Sign in' });
-        this.adminSignInHeading = page.getByRole('heading', { name: 'Admin sign in' });
+        this.usernameInput = page.getByLabel('Usuario');
+        this.passwordInput = page.getByLabel('Contraseña');
+        this.signInButton = page.getByRole('button', { name: 'Iniciar Sesión' });
+        this.adminSignInHeading = page.getByRole('heading', { name: 'Panel de Administración' });
     }
 
-    async login(username: string, password: string) {
-        await this.usernameInput.fill(username);
-        await this.passwordInput.fill(password);
+    async login() {
         await this.signInButton.click();
     }
 

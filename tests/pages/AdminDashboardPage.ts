@@ -4,13 +4,15 @@ export class AdminDashboardPage {
     readonly page: Page;
     readonly dashboardHeading: Locator;
     readonly signOutButton: Locator;
-    readonly inventoryHeaderSection: Locator;
+    readonly inventorySection: Locator;
 
     constructor(page: Page) {
         this.page = page;
         this.dashboardHeading = page.getByRole('heading', { name: 'Admin dashboard' });
-        this.signOutButton = page.getByRole('button', { name: 'Sign out' });
-        this.inventoryHeaderSection = page.locator('#table-header');
+        this.signOutButton = page.getByRole('button', { name: 'Log Out' });
+        this.inventorySection = page.locator('section', {
+            has: page.getByRole('heading', { name: 'Inventory' })
+        });
     }
 
     async expectDashboardVisible() {
@@ -19,11 +21,11 @@ export class AdminDashboardPage {
     }
 
     async expectInventoryHeaders(headers: string[]) {
-        await expect(this.inventoryHeaderSection).toBeVisible();
+        await expect(this.page.getByRole('heading', { name: 'Inventory' })).toBeVisible();
+        await expect(this.inventorySection).toBeVisible();
+
         for (const header of headers) {
-            await expect(
-                this.inventoryHeaderSection.getByRole('cell', { name: header, exact: true })
-            ).toBeVisible();
+            await expect(this.inventorySection.getByText(header, { exact: true }).first()).toBeVisible();
         }
     }
 

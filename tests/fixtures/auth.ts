@@ -6,15 +6,11 @@ import { testUsers } from '../testData/credentials';
 export const test = base.extend<{ loggedInPage: Page }>({
   loggedInPage: async ({ page }, provide) => {
     // Navega y se loguea
-    await page.goto(appUrls.home);
-    await page.getByRole('link', { name: 'Admin' }).click();
-
+    await page.goto(appUrls.loginAdmin);
     // Se asegura de que la pagina de admin haya rendereado antes de continuar
-    await baseExpect(page.getByRole('heading', { name: 'Admin sign in' })).toBeVisible();
+    await baseExpect(page.getByRole('heading', { name: 'Panel de Administración' })).toBeVisible();
     // login propiamente dicho
-    await page.getByRole('textbox', { name: 'Username' }).fill(testUsers.admin.username);
-    await page.getByRole('textbox', { name: 'Password' }).fill(testUsers.admin.password);
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
 
     // Espera el dashboard una vez que se logueó
     await page.waitForURL('**/admin*', { waitUntil: 'networkidle' });
