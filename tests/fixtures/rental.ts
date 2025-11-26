@@ -26,7 +26,9 @@ export async function fillRentalForm(rental: any, opts: FillOptions = {}) {
     end: formatISO(end),
   });
 
-  return { start, end };
+ return { name, email, phone, start, end };
 }
+
+
 
 export default fillRentalForm;

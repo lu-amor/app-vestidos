@@ -2,23 +2,20 @@ import { test as base, expect as baseExpect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { appUrls } from '../testData/urls';
 import { testUsers } from '../testData/credentials';
+import { LoginPage } from '../pages/LoginPage';
+import { AdminDashboardPage } from '../pages/AdminDashboardPage';
 
 export const test = base.extend<{ loggedInPage: Page }>({
-  loggedInPage: async ({ page }, provide) => {
-    // Navega y se loguea
-    await page.goto(appUrls.loginAdmin);
-    // Se asegura de que la pagina de admin haya rendereado antes de continuar
-    await baseExpect(page.getByRole('heading', { name: 'Panel de Administración' })).toBeVisible();
-    // login propiamente dicho
-    await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
+    loggedInPage: async ({ page }, provide) => {
+        const loginPage = new LoginPage(page);
+        await loginPage.goto(appUrls.loginAdmin);
+        await loginPage.loginWithoutCredentials();
 
-    // Espera el dashboard una vez que se logueó
-    await page.waitForURL('**/admin*', { waitUntil: 'networkidle' });
-    await baseExpect(page.getByRole('heading', { name: 'Admin dashboard' })).toBeVisible();
+        const adminDashboard = new AdminDashboardPage(page);
+        await adminDashboard.expectDashboardVisible();
 
-    // Devuelve la página con user logueado
-    await provide(page);
-  },
+        await provide(page);
+    },
 });
 
 export const expect = baseExpect;

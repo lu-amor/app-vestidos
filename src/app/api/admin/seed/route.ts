@@ -8,7 +8,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const name = body.name || `Seed Item ${Date.now()}`;
+    const name = body.name;
 
     const { item, error: addErr } = addItem({
       name,

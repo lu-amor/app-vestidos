@@ -1,15 +1,24 @@
 import { test, expect } from '@playwright/test';
 import { DetailsPage } from './pages/DetailsPage';
-import { formatISO, addDays } from './testData/rentalUtils';
+import { appUrls } from './testData/urls';
 import { fillRentalForm } from './fixtures/rental';
 
 test.describe('detailsForm', () => {
     let details: DetailsPage;
 
     test.beforeEach(async ({ page }) => {
-        await page.goto('/items/1');
+        await page.goto(appUrls.details("3"));
+        await page.waitForLoadState('networkidle');
+        await expect(page.locator('text=This page could not be found.')).not.toBeVisible();
         details = new DetailsPage(page);
         await details.waitForVisible();
+    });
+
+    test('verify page content', async ({ page }) => {
+        await expect(page.locator('img[alt="Floral midi dress perfect for daytime events"]')).toBeVisible();
+        await expect(page.locator('h1')).toHaveText('Floral Midi Dress');
+        await expect(page.getByRole('heading', { name: 'Availability' })).toBeVisible();
+        await expect(details.form).toBeVisible();
     });
 
     test('reserva exitosa', async ({ page }) => {
@@ -26,7 +35,7 @@ test.describe('detailsForm', () => {
         await fillRentalForm(details, { startFromToday: 3, duration: 1 });
         await details.submitAndExpectToast('Request submitted — we will confirm via email.');
 
-        await page.goto('/items/1');
+        await page.goto('/items/3');
         details = new DetailsPage(page);
         await details.waitForVisible();
 
@@ -35,7 +44,6 @@ test.describe('detailsForm', () => {
     });
 
     test('reserva con fechas ya pasadas - no exitosa', async ({ page }) => {
-        // startFromToday: -1 creates a start date in the past
         await fillRentalForm(details, { startFromToday: -10, duration: 1 });
 
         await details.submitWithoutWaiting();

@@ -202,7 +202,7 @@ export default function AdminDashboardClient() {
               color: item.color,
               style: item.style,
               description: item.description || `${item.name} - ${item.color}`,
-              images: item.image ? [item.image] : [item.images?.[0] || '/images/placeholder.jpg'],
+              images: item.image ? [item.image] : [item.images?.[0]],
               alt: item.alt || item.name,
               activeRentals,
               upcomingRentals,
@@ -329,7 +329,7 @@ export default function AdminDashboardClient() {
               color: item.color,
               style: item.style,
               description: item.description || `${item.name} - ${item.color}`,
-              images: item.image ? [item.image] : [item.images?.[0] || '/images/placeholder.jpg'],
+              images: item.image ? [item.image] : [item.images?.[0]],
               alt: item.alt || item.name,
               activeRentals: 0,
               upcomingRentals: 0,
@@ -367,7 +367,7 @@ export default function AdminDashboardClient() {
               color: item.color,
               style: item.style,
               description: item.description || `${item.name} - ${item.color}`,
-              images: item.image ? [item.image] : [item.images?.[0] || '/images/placeholder.jpg'],
+              images: item.image ? [item.image] : [item.images?.[0]],
               alt: item.alt || item.name,
               activeRentals: 0,
               upcomingRentals: 0,
@@ -428,7 +428,7 @@ export default function AdminDashboardClient() {
               color: item.color,
               style: item.style,
               description: item.description || `${item.name} - ${item.color}`,
-              images: item.image ? [item.image] : [item.images?.[0] || '/images/placeholder.jpg'],
+              images: item.image ? [item.image] : [item.images?.[0]],
               alt: item.alt || item.name,
               activeRentals: 0,
               upcomingRentals: 0,
@@ -456,12 +456,14 @@ export default function AdminDashboardClient() {
   };
 
   const filteredItems = items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.color.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (item.style?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+    const safe = (s?: string) => (s || '').toLowerCase();
+    const searchLower = (searchTerm || '').toLowerCase();
+    const matchesSearch = safe(item.name).includes(searchLower) ||
+                         safe(item.color).includes(searchLower) ||
+                         safe(item.style).includes(searchLower);
     
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-      const matchesColor = colorFilter === 'all' || (item.color || '').toLowerCase() === colorFilter.toLowerCase();
+      const matchesColor = colorFilter === 'all' || (item.color || '').toLowerCase() === (colorFilter || '').toLowerCase();
     
     const matchesStatus = statusFilter === 'all' || 
                          (statusFilter === 'available' && !item.isCurrentlyRented) ||
@@ -548,7 +550,7 @@ export default function AdminDashboardClient() {
                       try {
                         const res = await fetch('/api/filters/colors', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ color: c }) });
                         if (res.ok) {
-                          setAvailableColors(prev => prev.filter(x => x.toLowerCase() !== c.toLowerCase()));
+                          setAvailableColors(prev => prev.filter(x => (x || '').toLowerCase() !== (c || '').toLowerCase()));
                           addToast({ type: 'success', message: `Color ${c} eliminado` });
                         } else {
                           const err = await res.json().catch(() => ({}));
@@ -750,7 +752,6 @@ export default function AdminDashboardClient() {
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = '/images/placeholder.jpg';
                   }}
                 />
                 <div className="absolute top-3 right-3">
@@ -878,7 +879,6 @@ export default function AdminDashboardClient() {
                                 className="w-10 h-10 rounded-lg object-cover border border-gray-600"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
-                                  target.src = '/images/placeholder.jpg';
                                 }}
                               />
                             </div>

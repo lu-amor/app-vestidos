@@ -21,20 +21,10 @@ export type Rental = {
   itemId: number;
   start: string;
   end: string;
-  start: string; // ISO date (yyyy-mm-dd)
-  end: string; // ISO date (yyyy-mm-dd)
   customer: { name: string; email: string; phone: string };
   createdAt: string;
   status: "active" | "canceled";
 };
-
-
-// Style and color options (exported so UI can render selects)
-// imported by client components without pulling in server-only modules.
-
-
-// Style and color options (exported so UI can render selects)
-// imported by client components without pulling in server-only modules.
 
 // ----------------------------------------------------
 // Filesystem config
@@ -200,7 +190,8 @@ export function addColorOption(color: string) {
   if (!normalized) return { error: "Invalid color" as const };
 
   const colors = readColorsFile();
-  if (colors.some((c) => c.toLowerCase() === normalized.toLowerCase()))
+  const normalizedLower = normalized.toLowerCase();
+  if (colors.some((c) => (c || '').toLowerCase() === normalizedLower))
     return { error: "Already exists" as const };
 
   colors.push(normalized);
@@ -213,7 +204,8 @@ export function removeColorOption(color: string) {
   if (!normalized) return { error: "Invalid color" as const };
 
   const colors = readColorsFile();
-  const idx = colors.findIndex((c) => c.toLowerCase() === normalized.toLowerCase());
+  const normalizedLower = normalized.toLowerCase();
+  const idx = colors.findIndex((c) => (c || '').toLowerCase() === normalizedLower);
   if (idx === -1) return { error: "Not found" as const };
 
   colors.splice(idx, 1);
@@ -233,13 +225,13 @@ export function listItems(filters?: {
   style?: string;
 }) {
   const items = readItemsFile();
-  const q = filters?.q?.toLowerCase().trim();
+  const q = (filters?.q || '').toLowerCase().trim();
 
   return items.filter((it) => {
     if (filters?.category && it.category !== filters.category) return false;
     if (filters?.size && !it.sizes.includes(filters.size)) return false;
-    if (filters?.color && it.color.toLowerCase() !== filters.color.toLowerCase()) return false;
-    if (filters?.style && (it.style ?? "").toLowerCase() !== filters.style.toLowerCase()) return false;
+    if (filters?.color && (it.color ?? '').toLowerCase() !== (filters.color ?? '').toLowerCase()) return false;
+    if (filters?.style && (it.style ?? '').toLowerCase() !== (filters.style ?? '').toLowerCase()) return false;
     if (q) {
       const haystack = [it.name, it.color, it.style ?? "", it.category].join(" ").toLowerCase();
       if (!haystack.includes(q)) return false;
@@ -251,6 +243,11 @@ export function listItems(filters?: {
 export function getItem(id: number) {
   const items = readItemsFile();
   return items.find((i) => i.id === id) ?? null;
+}
+
+export function listItemIds() {
+  const items = readItemsFile();
+  return items.map((i) => i.id);
 }
 
 export function getItemRentals(itemId: number) {

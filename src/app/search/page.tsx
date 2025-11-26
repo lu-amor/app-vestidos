@@ -20,6 +20,8 @@ export default async function Page({ searchParams }: { searchParams: any }) {
     size = "",
     color = "",
     style = "",
+    start = "",
+    end = "",
   } = (await searchParams) || {};
 
   const items = await listItems({
@@ -71,8 +73,8 @@ export default async function Page({ searchParams }: { searchParams: any }) {
                 size,
                 color,
                 style,
-                start: searchParams?.start,
-                end: searchParams?.end,
+                start: start,
+                end: end,
               }}
               buttonText="Search dresses"
               compact={true}
