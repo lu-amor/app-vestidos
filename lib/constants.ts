@@ -3,6 +3,7 @@ export const STYLE_OPTIONS = [
   "black-tie",
   "daytime",
   "cocktail",
+  "Classic",
   "Elegant",
   "Formal",
   "Bohemian",
@@ -15,5 +16,6 @@ export const COLOR_OPTIONS = [
   "Black",
   "Floral",
   "Burgundy",
+  "Red",
 ] as const;
 export type ColorOption = (typeof COLOR_OPTIONS)[number];

@@ -223,6 +223,10 @@ export function listItems(filters?: {
   size?: string;
   color?: string;
   style?: string;
+  start?: string;
+  end?: string;
+  minPrice?: number;
+  maxPrice?: number;
 }) {
   const items = readItemsFile();
   const q = (filters?.q || '').toLowerCase().trim();
@@ -230,8 +234,17 @@ export function listItems(filters?: {
   return items.filter((it) => {
     if (filters?.category && it.category !== filters.category) return false;
     if (filters?.size && !it.sizes.includes(filters.size)) return false;
-    if (filters?.color && (it.color ?? '').toLowerCase() !== (filters.color ?? '').toLowerCase()) return false;
-    if (filters?.style && (it.style ?? '').toLowerCase() !== (filters.style ?? '').toLowerCase()) return false;
+    if (filters?.color && it.color.toLowerCase() !== filters.color.toLowerCase()) return false;
+    if (filters?.style && (it.style ?? "").toLowerCase() !== filters.style.toLowerCase()) return false;
+    if (typeof filters?.minPrice === "number" && it.pricePerDay < filters.minPrice) {
+      return false;
+    }
+    if (typeof filters?.maxPrice === "number" && it.pricePerDay > filters.maxPrice) {
+      return false;
+    }
+    if (filters?.start && filters?.end) {
+      if (!isItemAvailable(it.id, filters.start, filters.end)) return false;
+    }
     if (q) {
       const haystack = [it.name, it.color, it.style ?? "", it.category].join(" ").toLowerCase();
       if (!haystack.includes(q)) return false;
