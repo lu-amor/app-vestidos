@@ -65,7 +65,7 @@ export default async function Page({ searchParams }: { searchParams: any }) {
             Browse catalog
           </h1>
 
-          <form method="GET" className="mt-6">
+          <div className="mt-6">
             <SearchFilters
               defaults={{
                 q,
@@ -79,7 +79,7 @@ export default async function Page({ searchParams }: { searchParams: any }) {
               buttonText="Search dresses"
               compact={true}
             />
-          </form>
+          </div>
 
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {items.map((it) => (
@@ -94,6 +94,7 @@ export default async function Page({ searchParams }: { searchParams: any }) {
                     src={it.images[0]}
                     alt={it.alt}
                     fill
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                     className="object-cover"
                   />
                   <div className="absolute inset-0 flex items-end p-4">
@@ -126,7 +127,7 @@ export default async function Page({ searchParams }: { searchParams: any }) {
 
             {items.length === 0 && (
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                No items match your filters.
+      div       No items match your filters.
               </p>
             )}
           </div>

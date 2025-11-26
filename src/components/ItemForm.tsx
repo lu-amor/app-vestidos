@@ -42,7 +42,7 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
     color: item?.color || '',
     style: item?.style || '',
     description: item?.description || '',
-    images: item?.images || ['/images/placeholder.jpg']
+    images: item?.images || ['/images/dresses/default.png'],
   });
 
   const [uploading, setUploading] = useState(false);
@@ -299,14 +299,20 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
             accept="image/*"
             onChange={async (e) => {
               const f = e.target.files?.[0];
-              if (!f) return;
-              // show local preview while uploading
-              const localUrl = URL.createObjectURL(f);
-              setPreviewUrl(localUrl);
-              try {
-                await uploadFile(f);
-              } catch (err: any) {
-                setErrors(prev => ({ ...prev, images: err?.message || 'Upload failed' }));
+              if (f) {
+                setSelectedFileName(f.name);
+                const localUrl = URL.createObjectURL(f);
+                setPreviewUrl(localUrl);
+                try {
+                  await uploadFile(f);
+                } catch (err: any) {
+                  setErrors(prev => ({ ...prev, images: err?.message || 'Upload failed' }));
+                }
+              } else {
+                const defaultPath = '/images/dresses/default.png';
+                setSelectedFileName(null);
+                handleChange('images', [defaultPath]);
+                setPreviewUrl(defaultPath);
               }
             }}
             disabled={loading || uploading}
