@@ -17,7 +17,6 @@ test.describe('Items CRUD (admin)', () => {
   });
 
   test('delete item', async ({ loggedInPage: page }) => {
-    // Count items by number of Edit buttons, then delete the first item
     const editButtons = page.getByRole('button', { name: /Edit|Editar/ });
     const initialCount = await editButtons.count();
     expect(initialCount).toBeGreaterThan(0);
