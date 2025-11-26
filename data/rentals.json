@@ -1,2 +1,41 @@
 [
+  {
+    "itemId": 5,
+    "start": "2025-11-20",
+    "end": "2025-11-21",
+    "customer": {
+      "name": "Test Customer",
+      "email": "test@example.com",
+      "phone": "+34123456789"
+    },
+    "id": "6f3c9076-25c7-4f1d-8dd4-066c6e334034",
+    "createdAt": "2025-11-26T02:28:01.945Z",
+    "status": "active"
+  },
+  {
+    "itemId": 3,
+    "start": "2025-11-27",
+    "end": "2025-11-28",
+    "customer": {
+      "name": "Juan",
+      "email": "juan@example.com",
+      "phone": "091123123"
+    },
+    "id": "36f65ea2-8c4b-4c2d-93e7-1a0b1d375dd9",
+    "createdAt": "2025-11-26T02:28:09.679Z",
+    "status": "active"
+  },
+  {
+    "itemId": 3,
+    "start": "2025-11-29",
+    "end": "2025-11-30",
+    "customer": {
+      "name": "Juan",
+      "email": "juan@example.com",
+      "phone": "091123123"
+    },
+    "id": "0189ef83-5a10-4d4a-9bff-b6d5145aa095",
+    "createdAt": "2025-11-26T02:28:09.681Z",
+    "status": "active"
+  }
 ]
