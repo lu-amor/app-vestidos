@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
 export type Category = "dress" | "shoes" | "bag" | "jacket";
 
@@ -48,10 +48,10 @@ export type Rental = {
 // Filesystem config
 // ----------------------------------------------------
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const ITEMS_FILE = path.join(DATA_DIR, 'items.json');
-const RENTALS_FILE = path.join(DATA_DIR, 'rentals.json');
-const COLORS_FILE = path.join(DATA_DIR, 'colors.json');
+const DATA_DIR = path.join(process.cwd(), "data");
+const ITEMS_FILE = path.join(DATA_DIR, "items.json");
+const RENTALS_FILE = path.join(DATA_DIR, "rentals.json");
+const COLORS_FILE = path.join(DATA_DIR, "colors.json");
 
 function ensureDataDir() {
   try {
@@ -209,7 +209,7 @@ export function addColorOption(color: string) {
 
   const colors = readColorsFile();
   const normalizedLower = normalized.toLowerCase();
-  if (colors.some((c) => (c || '').toLowerCase() === normalizedLower))
+  if (colors.some((c) => (c || "").toLowerCase() === normalizedLower))
     return { error: "Already exists" as const };
 
   colors.push(normalized);
@@ -223,7 +223,9 @@ export function removeColorOption(color: string) {
 
   const colors = readColorsFile();
   const normalizedLower = normalized.toLowerCase();
-  const idx = colors.findIndex((c) => (c || '').toLowerCase() === normalizedLower);
+  const idx = colors.findIndex(
+    (c) => (c || "").toLowerCase() === normalizedLower
+  );
   if (idx === -1) return { error: "Not found" as const };
 
   colors.splice(idx, 1);
@@ -291,7 +293,6 @@ export function listItems(filters?: {
   });
 }
 
-
 export function getItem(id: number) {
   const items = readItemsFile();
   return items.find((i) => i.id === id) ?? null;
@@ -307,7 +308,12 @@ export function getItemRentals(itemId: number) {
   return rentals.filter((r) => r.itemId === itemId && r.status === "active");
 }
 
-export function hasOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string) {
+export function hasOverlap(
+  aStart: string,
+  aEnd: string,
+  bStart: string,
+  bEnd: string
+) {
   return !(aEnd < bStart || bEnd < aStart);
 }
 
@@ -316,7 +322,9 @@ export function isItemAvailable(itemId: number, start: string, end: string) {
   return rs.every((r) => !hasOverlap(start, end, r.start, r.end));
 }
 
-export function createRental(data: Omit<Rental, "id" | "createdAt" | "status">) {
+export function createRental(
+  data: Omit<Rental, "id" | "createdAt" | "status">
+) {
   const rentals = readRentalsFile();
   const items = readItemsFile();
 
@@ -325,12 +333,15 @@ export function createRental(data: Omit<Rental, "id" | "createdAt" | "status">) 
 
   const ok = rentals.every(
     (r) =>
-      !(r.itemId === data.itemId &&
+      !(
+        r.itemId === data.itemId &&
         hasOverlap(data.start, data.end, r.start, r.end) &&
-        r.status === "active")
+        r.status === "active"
+      )
   );
 
-  if (!ok) return { error: "Item is not available for the selected dates." as const };
+  if (!ok)
+    return { error: "Item is not available for the selected dates." as const };
 
   const rental: Rental = {
     ...data,
@@ -346,7 +357,9 @@ export function createRental(data: Omit<Rental, "id" | "createdAt" | "status">) 
 }
 
 export function listRentals() {
-  return readRentalsFile().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return readRentalsFile().sort((a, b) =>
+    b.createdAt.localeCompare(a.createdAt)
+  );
 }
 
 export function cancelRental(id: string) {
@@ -379,10 +392,7 @@ export function addItem(itemData: Omit<Item, "id">) {
   }
 }
 
-export function updateItem(
-  id: number,
-  updates: Partial<Omit<Item, "id">>
-) {
+export function updateItem(id: number, updates: Partial<Omit<Item, "id">>) {
   const items = readItemsFile();
   const index = items.findIndex((i) => i.id === id);
   if (index === -1) return { error: "Item not found" };
