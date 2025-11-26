@@ -14,6 +14,13 @@ test.describe('detailsForm', () => {
         await details.waitForVisible();
     });
 
+    test('verify page content', async ({ page }) => {
+        await expect(page.locator('img[alt="Floral midi dress perfect for daytime events"]')).toBeVisible();
+        await expect(page.locator('h1')).toHaveText('Floral Midi Dress');
+        await expect(page.getByRole('heading', { name: 'Availability' })).toBeVisible();
+        await expect(details.form).toBeVisible();
+    });
+
     test('reserva exitosa', async ({ page }) => {
         await fillRentalForm(details, { startFromToday: 1, duration: 1 });
         await details.submitAndExpectToast('Request submitted — we will confirm via email.');
