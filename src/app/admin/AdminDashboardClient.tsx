@@ -128,17 +128,6 @@ export default function AdminDashboardClient() {
   // Double-check authentication on client side
   useEffect(() => {
     const checkAuth = async () => {
-          <select
-            value={colorFilter}
-            onChange={(e) => setColorFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-800"
-            data-testid="admin-color-select"
-          >
-            <option value="all">Todos los colores</option>
-            {availableColors.map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
       try {
         const response = await fetch('/api/admin/rentals');
         if (response.status === 401) {
@@ -539,15 +528,20 @@ export default function AdminDashboardClient() {
       </div>
 
       {/* Filter Catalog Management (Admin) */}
-      <div className="border border-gray-700 rounded-lg shadow-sm p-6 mt-6">
-        <h3 className="text-lg font-semibold mb-3">Catálogo de colores</h3>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="bg-[#1f1f1f] dark:bg-[#1f1f1f] border border-[#2b2b2b] rounded-3xl shadow-sm p-6 mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Catálogo de colores</h3>
+          <div className="text-sm text-gray-400">Gestiona los colores disponibles</div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex-1">
-            <label className="block text-sm text-400 mb-1">Colores disponibles</label>
+            <label className="block text-sm text-gray-400 mb-2">Colores disponibles</label>
             <div className="flex flex-wrap gap-2">
               {availableColors.map((c) => (
-                <div key={c} className="relative inline-flex items-center">
-                  <span data-testid={`color-chip-${c}`} className="px-3 py-1 bg-gray-700 text-white rounded-full text-sm capitalize">{c}</span>
+                <div key={c} className="inline-flex items-center bg-[#2b2b2b] border border-[#3a3a3a] rounded-full px-3 py-1">
+                  <span data-testid={`color-chip-${c}`} className="inline-block w-3 h-3 rounded-full mr-2" style={{ backgroundColor: c }} />
+                  <span className="text-sm text-gray-200 capitalize mr-2">{c}</span>
                   <button
                     aria-label={`Eliminar ${c}`}
                     onClick={async () => {
@@ -564,7 +558,7 @@ export default function AdminDashboardClient() {
                         addToast({ type: 'error', message: 'Error eliminando color' });
                       }
                     }}
-                    className="-ml-2 -mr-2 p-1 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs"
+                    className="ml-1 p-1 rounded-full bg-[#e0afa0]/50 hover:bg-red-700 text-white text-xs ml-4"
                     title={`Eliminar ${c}`}
                   >
                     ✕
@@ -573,12 +567,13 @@ export default function AdminDashboardClient() {
               ))}
             </div>
           </div>
+
           <div className="w-full sm:w-auto flex items-center gap-2">
             <input
               value={newColor}
               onChange={(e) => setNewColor(e.target.value)}
               placeholder="Nuevo color"
-              className="px-3 py-2 border border-gray-600 rounded-lg bg-800"
+              className="px-3 py-2 border border-[#3a3a3a] rounded-full bg-[#111111] text-gray-200"
               data-testid="admin-new-color-input"
             />
             <button
@@ -598,7 +593,7 @@ export default function AdminDashboardClient() {
                   addToast({ type: 'error', message: 'Error al guardar color' });
                 }
               }}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+              className="px-4 py-2 bg-[#463f3a] hover:bg-[#3a352f] text-white rounded-full"
               data-testid="admin-add-color-btn"
             >Agregar</button>
             <button
@@ -616,7 +611,7 @@ export default function AdminDashboardClient() {
                   addToast({ type: 'error', message: 'Error al obtener colores' });
                 }
               }}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
+              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-full"
               data-testid="admin-refresh-colors-btn"
             >Actualizar</button>
           </div>
