@@ -14,7 +14,7 @@ export const test = base.extend<{ loggedInPage: Page }>({
 
     // Espera el dashboard una vez que se logueó
     await page.waitForURL('**/admin*', { waitUntil: 'networkidle' });
-    await baseExpect(page.getByRole('heading', { name: 'Admin dashboard' })).toBeVisible();
+    await baseExpect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible();
 
     // Devuelve la página con user logueado
     await provide(page);
