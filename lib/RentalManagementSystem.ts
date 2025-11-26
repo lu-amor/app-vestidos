@@ -21,10 +21,20 @@ export type Rental = {
   itemId: number;
   start: string;
   end: string;
+  start: string; // ISO date (yyyy-mm-dd)
+  end: string; // ISO date (yyyy-mm-dd)
   customer: { name: string; email: string; phone: string };
   createdAt: string;
   status: "active" | "canceled";
 };
+
+
+// Style and color options (exported so UI can render selects)
+// imported by client components without pulling in server-only modules.
+
+
+// Style and color options (exported so UI can render selects)
+// imported by client components without pulling in server-only modules.
 
 // ----------------------------------------------------
 // Filesystem config
