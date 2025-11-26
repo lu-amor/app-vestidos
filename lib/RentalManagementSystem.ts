@@ -1,12 +1,30 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
 export type Category = "dress" | "shoes" | "bag" | "jacket";
+
+function normalizeCategory(raw?: string | null): Category | undefined {
+  if (!raw) return undefined;
+
+  const map: Record<string, Category> = {
+    dress: "dress",
+    dresses: "dress",
+    shoe: "shoes",
+    shoes: "shoes",
+    bag: "bag",
+    bags: "bag",
+    jacket: "jacket",
+    jackets: "jacket",
+  };
+
+  const key = raw.toLowerCase();
+  return map[key];
+}
 
 export type Item = {
   id: number;
   name: string;
-  category: Category;
+  category: string;
   pricePerDay: number;
   sizes: string[];
   color: string;
@@ -30,10 +48,10 @@ export type Rental = {
 // Filesystem config
 // ----------------------------------------------------
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const ITEMS_FILE = path.join(DATA_DIR, 'items.json');
-const RENTALS_FILE = path.join(DATA_DIR, 'rentals.json');
-const COLORS_FILE = path.join(DATA_DIR, 'colors.json');
+const DATA_DIR = path.join(process.cwd(), "data");
+const ITEMS_FILE = path.join(DATA_DIR, "items.json");
+const RENTALS_FILE = path.join(DATA_DIR, "rentals.json");
+const COLORS_FILE = path.join(DATA_DIR, "colors.json");
 
 function ensureDataDir() {
   try {
@@ -191,7 +209,7 @@ export function addColorOption(color: string) {
 
   const colors = readColorsFile();
   const normalizedLower = normalized.toLowerCase();
-  if (colors.some((c) => (c || '').toLowerCase() === normalizedLower))
+  if (colors.some((c) => (c || "").toLowerCase() === normalizedLower))
     return { error: "Already exists" as const };
 
   colors.push(normalized);
@@ -205,7 +223,9 @@ export function removeColorOption(color: string) {
 
   const colors = readColorsFile();
   const normalizedLower = normalized.toLowerCase();
-  const idx = colors.findIndex((c) => (c || '').toLowerCase() === normalizedLower);
+  const idx = colors.findIndex(
+    (c) => (c || "").toLowerCase() === normalizedLower
+  );
   if (idx === -1) return { error: "Not found" as const };
 
   colors.splice(idx, 1);
@@ -219,21 +239,54 @@ export function removeColorOption(color: string) {
 
 export function listItems(filters?: {
   q?: string;
-  category?: Category;
+  category?: string;
   size?: string;
   color?: string;
   style?: string;
+  start?: string;
+  end?: string;
+  minPrice?: number;
+  maxPrice?: number;
 }) {
   const items = readItemsFile();
-  const q = (filters?.q || '').toLowerCase().trim();
+  const q = filters?.q ? filters.q.toLowerCase().trim() : "";
+  const filterCategory = normalizeCategory(filters?.category ?? undefined);
 
   return items.filter((it) => {
-    if (filters?.category && it.category !== filters.category) return false;
+    const itemCategory = normalizeCategory(it.category);
+
+    if (filterCategory && itemCategory !== filterCategory) return false;
+
     if (filters?.size && !it.sizes.includes(filters.size)) return false;
-    if (filters?.color && (it.color ?? '').toLowerCase() !== (filters.color ?? '').toLowerCase()) return false;
-    if (filters?.style && (it.style ?? '').toLowerCase() !== (filters.style ?? '').toLowerCase()) return false;
+    if (
+      filters?.color &&
+      it.color.toLowerCase() !== filters.color.toLowerCase()
+    )
+      return false;
+    if (
+      filters?.style &&
+      (it.style ?? "").toLowerCase() !== filters.style.toLowerCase()
+    )
+      return false;
+    if (
+      typeof filters?.minPrice === "number" &&
+      it.pricePerDay < filters.minPrice
+    ) {
+      return false;
+    }
+    if (
+      typeof filters?.maxPrice === "number" &&
+      it.pricePerDay > filters.maxPrice
+    ) {
+      return false;
+    }
+    if (filters?.start && filters?.end) {
+      if (!isItemAvailable(it.id, filters.start, filters.end)) return false;
+    }
     if (q) {
-      const haystack = [it.name, it.color, it.style ?? "", it.category].join(" ").toLowerCase();
+      const haystack = [it.name, it.color, it.style ?? "", it.category]
+        .join(" ")
+        .toLowerCase();
       if (!haystack.includes(q)) return false;
     }
     return true;
@@ -255,7 +308,12 @@ export function getItemRentals(itemId: number) {
   return rentals.filter((r) => r.itemId === itemId && r.status === "active");
 }
 
-export function hasOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string) {
+export function hasOverlap(
+  aStart: string,
+  aEnd: string,
+  bStart: string,
+  bEnd: string
+) {
   return !(aEnd < bStart || bEnd < aStart);
 }
 
@@ -264,7 +322,9 @@ export function isItemAvailable(itemId: number, start: string, end: string) {
   return rs.every((r) => !hasOverlap(start, end, r.start, r.end));
 }
 
-export function createRental(data: Omit<Rental, "id" | "createdAt" | "status">) {
+export function createRental(
+  data: Omit<Rental, "id" | "createdAt" | "status">
+) {
   const rentals = readRentalsFile();
   const items = readItemsFile();
 
@@ -273,12 +333,15 @@ export function createRental(data: Omit<Rental, "id" | "createdAt" | "status">) 
 
   const ok = rentals.every(
     (r) =>
-      !(r.itemId === data.itemId &&
+      !(
+        r.itemId === data.itemId &&
         hasOverlap(data.start, data.end, r.start, r.end) &&
-        r.status === "active")
+        r.status === "active"
+      )
   );
 
-  if (!ok) return { error: "Item is not available for the selected dates." as const };
+  if (!ok)
+    return { error: "Item is not available for the selected dates." as const };
 
   const rental: Rental = {
     ...data,
@@ -294,7 +357,9 @@ export function createRental(data: Omit<Rental, "id" | "createdAt" | "status">) 
 }
 
 export function listRentals() {
-  return readRentalsFile().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return readRentalsFile().sort((a, b) =>
+    b.createdAt.localeCompare(a.createdAt)
+  );
 }
 
 export function cancelRental(id: string) {
@@ -327,10 +392,7 @@ export function addItem(itemData: Omit<Item, "id">) {
   }
 }
 
-export function updateItem(
-  id: number,
-  updates: Partial<Omit<Item, "id">>
-) {
+export function updateItem(id: number, updates: Partial<Omit<Item, "id">>) {
   const items = readItemsFile();
   const index = items.findIndex((i) => i.id === id);
   if (index === -1) return { error: "Item not found" };

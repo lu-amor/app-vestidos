@@ -1,16 +1,55 @@
 import Image from "next/image";
 import Link from "next/link";
-import { listItems, Item } from "../../lib/RentalManagementSystem";
+import { listItems, Item, Category } from "../../lib/RentalManagementSystem";
 import SearchFilters from "../components/SearchFilters";
 
-export default function Home() {
+// Hacemos el componente async y tipamos searchParams como Promise de objeto
+type HomeSearchParams = Promise<{
+  q?: string;
+  category?: string;
+  size?: string;
+  color?: string;
+  style?: string;
+  start?: string;
+  end?: string;
+  minPrice?: string;
+  maxPrice?: string;
+}>;
+
+export default async function Home({ searchParams }: { searchParams: HomeSearchParams }) {
+  // Esperamos los searchParams ANTES de usarlos
+  const params = (await searchParams) || {};
+
+  const {
+    q = "",
+    category = "",
+    size = "",
+    color = "",
+    style = "",
+    start = "",
+    end = "",
+    minPrice = "",
+    maxPrice = "",
+  } = params;
+
   const featured: Array<{
     id: number;
     name: string;
     price: number;
     image: string;
     alt: string;
-  }> = listItems({ category: "dress" })
+  }> = listItems({
+    q,
+    category: category ? (category as Category) : undefined,
+    size: size || undefined,
+    color: color || undefined,
+    style: style || undefined,
+    start: start || undefined,
+    end: end || undefined,
+    minPrice: minPrice ? Number(minPrice) : undefined,
+    maxPrice: maxPrice ? Number(maxPrice) : undefined,
+  })
+    .filter((it: Item) => it.category === "dress")
     .slice(0, 4)
     .map((it: Item) => ({
       id: it.id,
@@ -40,7 +79,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#f4f3ee] to-[#bcb8b1] text-[#463f3a] dark:from-slate-950 dark:to-slate-900 dark:text-slate-100">
-      {/* Header se mantiene igual, sin dark: */}
       <header className="sticky top-0 z-30 backdrop-blur bg-[#463f3a]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between shadow-lg">
           <Link
@@ -82,8 +120,23 @@ export default function Home() {
                 Look stunning without the price tag. Flexible rentals, free
                 cleaning, and fast delivery.
               </p>
+
+              {/* MISMOS filtros que en /search */}
               <form action="/search" method="GET" className="mt-8">
-                <SearchFilters defaults={{}} buttonText="Search dresses" />
+                <SearchFilters
+                  defaults={{
+                    q,
+                    category,
+                    size,
+                    color,
+                    style,
+                    start,
+                    end,
+                    minPrice,
+                    maxPrice,
+                  }}
+                  buttonText="Search dresses"
+                />
               </form>
             </div>
           </div>
@@ -139,6 +192,11 @@ export default function Home() {
                 </div>
               </div>
             ))}
+            {featured.length === 0 && (
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-4">
+                No featured items match your filters.
+              </p>
+            )}
           </div>
         </section>
 

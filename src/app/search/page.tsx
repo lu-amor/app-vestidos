@@ -11,6 +11,8 @@ type SearchParams = {
   style?: string;
   start?: string;
   end?: string;
+  minPrice?: string;
+  maxPrice?: string;
 };
 
 export default async function Page({ searchParams }: { searchParams: any }) {
@@ -22,6 +24,8 @@ export default async function Page({ searchParams }: { searchParams: any }) {
     style = "",
     start = "",
     end = "",
+    minPrice = "",
+    maxPrice = "",
   } = (await searchParams) || {};
 
   const items = await listItems({
@@ -30,6 +34,10 @@ export default async function Page({ searchParams }: { searchParams: any }) {
     size: size || undefined,
     color: color || undefined,
     style: style || undefined,
+    start: start || undefined,
+    end: end || undefined,
+    minPrice: minPrice ? Number(minPrice) : undefined,
+    maxPrice: maxPrice ? Number(maxPrice) : undefined,
   });
 
   return (
@@ -73,8 +81,10 @@ export default async function Page({ searchParams }: { searchParams: any }) {
                 size,
                 color,
                 style,
-                start: start,
-                end: end,
+                start,
+                end,
+                minPrice,
+                maxPrice, 
               }}
               buttonText="Search dresses"
               compact={true}
@@ -86,7 +96,8 @@ export default async function Page({ searchParams }: { searchParams: any }) {
               <div
                 key={it.id}
                 data-testid="item-card"
-                data-color={it.color} 
+                data-color={it.color}
+                data-price={it.pricePerDay}   
                 className="rounded-3xl bg-[#f4f3ee] dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="relative aspect-[3/4]">
