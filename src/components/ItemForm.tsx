@@ -42,7 +42,7 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
     color: item?.color || '',
     style: item?.style || '',
     description: item?.description || '',
-    images: item?.images || ['/images/placeholder.jpg']
+    images: item?.images || ['/images/dresses/default.png'],
   });
 
   const [uploading, setUploading] = useState(false);
@@ -63,7 +63,7 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
           if (mounted) setAvailableColors(j.colors || []);
         }
       } catch (e) {
-        // ignore
+
       }
     })();
     return () => { mounted = false; };
@@ -71,7 +71,6 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Limpiar error cuando el usuario edita
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -126,7 +125,6 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
     }
   };
 
-  // Sync preview when editing existing item or when formData.images changes
   useEffect(() => {
     const img = formData.images && formData.images[0];
     if (img) {
@@ -138,7 +136,6 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
         try { URL.revokeObjectURL(previewUrl); } catch (e) { /* ignore */ }
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.images[0]]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -244,7 +241,8 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
         <select
           value={formData.color}
           onChange={(e) => handleChange('color', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-800 text-white"
+          className="w-full px-3 py-2 rounded-full bg-[#8a817c] text-white placeholder-white focus:outline-[#463f3a] focus:ring-2 focus:ring-[#463f3a]"
+          style={{WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none'}}
           disabled={loading}
           data-testid="item-color-select"
         >
@@ -299,14 +297,20 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
             accept="image/*"
             onChange={async (e) => {
               const f = e.target.files?.[0];
-              if (!f) return;
-              // show local preview while uploading
-              const localUrl = URL.createObjectURL(f);
-              setPreviewUrl(localUrl);
-              try {
-                await uploadFile(f);
-              } catch (err: any) {
-                setErrors(prev => ({ ...prev, images: err?.message || 'Upload failed' }));
+              if (f) {
+                setSelectedFileName(f.name);
+                const localUrl = URL.createObjectURL(f);
+                setPreviewUrl(localUrl);
+                try {
+                  await uploadFile(f);
+                } catch (err: any) {
+                  setErrors(prev => ({ ...prev, images: err?.message || 'Upload failed' }));
+                }
+              } else {
+                const defaultPath = '/images/dresses/default.png';
+                setSelectedFileName(null);
+                handleChange('images', [defaultPath]);
+                setPreviewUrl(defaultPath);
               }
             }}
             disabled={loading || uploading}
@@ -347,7 +351,7 @@ export default function ItemForm({ item, onSubmit, onCancel, loading = false }: 
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 bg-[#8a817c] text-white rounded-full hover:bg-[#6e6a65] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           data-testid="item-submit-btn"
         >
           {loading ? 'Saving...' : (item ? 'Update' : 'Create')}
