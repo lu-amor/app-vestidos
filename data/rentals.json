@@ -154,5 +154,31 @@
     "id": "a4da9af5-4dcc-4d51-9f11-cca131384152",
     "createdAt": "2025-11-25T23:31:58.303Z",
     "status": "canceled"
+  },
+  {
+    "itemId": 1,
+    "start": "2025-11-27",
+    "end": "2025-11-28",
+    "customer": {
+      "name": "Juan",
+      "email": "juan@example.com",
+      "phone": "091123123"
+    },
+    "id": "40a0a0d0-1f46-4463-9c72-3703269240fe",
+    "createdAt": "2025-11-26T00:19:35.155Z",
+    "status": "active"
+  },
+  {
+    "itemId": 1,
+    "start": "2025-11-29",
+    "end": "2025-11-30",
+    "customer": {
+      "name": "Juan",
+      "email": "juan@example.com",
+      "phone": "091123123"
+    },
+    "id": "850a2177-d059-4158-ae74-f43db3a5e495",
+    "createdAt": "2025-11-26T00:19:35.520Z",
+    "status": "active"
   }
 ]
