@@ -17,7 +17,7 @@ test.describe('Items CRUD (admin)', () => {
   });
 
   test('delete item', async ({ loggedInPage: page }) => {
-    const editButtons = page.getByRole('button', { name: /Edit|Editar/ });
+    const editButtons = page.getByRole('button', { name: /Edit/ });
     const initialCount = await editButtons.count();
     expect(initialCount).toBeGreaterThan(0);
 
@@ -35,22 +35,22 @@ test.describe('Items CRUD (admin)', () => {
     }
 
     if ((await deleteBtn.count()) === 0) {
-      deleteBtn = page.getByRole('button', { name: /Delete|Eliminar/ }).first();
+      deleteBtn = page.getByRole('button', { name: /Delete/ }).first();
     }
 
     await deleteBtn.click();
 
     await expect(page.getByText(/Confirmar Eliminación|Confirm Deletion|Confirm/)).toBeVisible();
-      const heading = page.getByRole('heading', { name: /Confirmar Eliminación|Confirm Deletion/ });
+      const heading = page.getByRole('heading', { name: /Confirm Deletion/ });
       await expect(heading).toBeVisible();
       const modal = heading.locator('xpath=ancestor::div[2]');
       await expect(modal).toBeVisible();
-      await modal.getByRole('button', { name: /Eliminar|Delete/ }).click();
+      await modal.getByRole('button', { name: /Delete/ }).click();
 
     await page.waitForResponse((r) => r.url().includes('/api/items') && r.request().method() === 'DELETE');
     await page.reload();
 
-    const editButtonsAfter = page.getByRole('button', { name: /Edit|Editar/ });
+    const editButtonsAfter = page.getByRole('button', { name: /Edit/ });
     await expect(editButtonsAfter).toHaveCount(initialCount - 1);
   });
 
