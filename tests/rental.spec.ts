@@ -37,7 +37,6 @@ test.describe('detailsForm', () => {
     });
 
     test('reserva con fechas ya pasadas - no exitosa', async ({ page }) => {
-        // startFromToday: -1 creates a start date in the past
         await fillRentalForm(details, { startFromToday: -10, duration: 1 });
 
         await details.submitWithoutWaiting();

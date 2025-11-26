@@ -22,13 +22,16 @@ export class LoginPage {
     }
 
     async login() {
-        // Use default test admin credentials
         await this.loginWithCredentials(testUsers.admin.username, testUsers.admin.password);
     }
 
     async loginWithCredentials(username: string, password: string) {
         await this.usernameInput.fill(username);
         await this.passwordInput.fill(password);
+        await this.signInButton.click();
+    }
+
+    async loginWithoutCredentials() {
         await this.signInButton.click();
     }
 

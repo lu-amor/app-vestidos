@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { testUsers } from './testData/credentials';
 import { appUrls } from './testData/urls';
+import { LoginPage } from './pages/LoginPage';
 
-test('test', async ({ page }) => {
-    await page.goto(appUrls.loginAdmin);
-    await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
+test('login', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto(appUrls.loginAdmin);
+    await loginPage.loginWithoutCredentials();
     await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Log Out' })).toBeVisible();
     await page.getByRole('button', { name: 'Log Out' }).click();
