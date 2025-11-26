@@ -1,47 +1,37 @@
 import fs from "fs";
 import path from "path";
-import { test, expect, Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
+import { CatalogPage } from "./pages/catalogPage";
 
 const dataDir = path.join(process.cwd(), "data");
 const itemsFile = path.join(dataDir, "items.json");
 const rentalsFile = path.join(dataDir, "rentals.json");
-const colorsFile = path.join(dataDir, "colors.json");
 
 function writeData(items: any[], rentals: any[]) {
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
   fs.writeFileSync(itemsFile, JSON.stringify(items, null, 2), "utf8");
   fs.writeFileSync(rentalsFile, JSON.stringify(rentals, null, 2), "utf8");
-  const colors = Array.from(new Set(items.map((i) => i.color))).filter(Boolean);
-  fs.writeFileSync(colorsFile, JSON.stringify(colors, null, 2), "utf8");
 }
 
-async function selectOptionByText(
-  page: Page,
-  name: string,
-  textFragment: string
-): Promise<string> {
-  const select = page.locator(`select[name="${name}"]`);
-  await select.waitFor({ state: "visible" });
-  const options = select.locator("option");
-  const count = await options.count();
+let originalItemsContent: string | null = null;
+let originalRentalsContent: string | null = null;
+let hadItemsFile = false;
+let hadRentalsFile = false;
 
-  for (let i = 0; i < count; i++) {
-    const opt = options.nth(i);
-    const label = (await opt.textContent())?.trim() ?? "";
-    const value = (await opt.getAttribute("value")) ?? "";
-    if (!value) continue;
-    if (label.includes(textFragment)) {
-      await select.selectOption(value);
-      return value;
-    }
-  }
-  throw new Error(
-    `No option with text containing "${textFragment}" in select[name="${name}"]`
-  );
-}
-
-test.describe("Catálogo - flujo completo de interacción con filtros", () => {
+test.describe
+  .serial("Catálogo - flujo completo de interacción con filtros", () => {
   test.beforeAll(() => {
+    if (fs.existsSync(itemsFile)) {
+      hadItemsFile = true;
+      originalItemsContent = fs.readFileSync(itemsFile, "utf8");
+    }
+    if (fs.existsSync(rentalsFile)) {
+      hadRentalsFile = true;
+      originalRentalsContent = fs.readFileSync(rentalsFile, "utf8");
+    }
+
+    const placeholder = "/images/dresses/placeholder-test.png";
+
     const items = [
       {
         id: 1,
@@ -52,20 +42,8 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         color: "Red",
         style: "Classic",
         description: "A red classic dress",
-        images: ["/images/dresses/1.jpg"],
-        alt: "Red Dress",
-      },
-      {
-        id: 2,
-        name: "Gold Bag",
-        category: "bag",
-        pricePerDay: 8000,
-        sizes: [],
-        color: "Gold",
-        style: "Glamorous",
-        description: "Golden bag",
-        images: ["/images/dresses/2.jpg"],
-        alt: "Gold Bag",
+        images: [placeholder],
+        alt: "Red Dress A",
       },
       {
         id: 3,
@@ -76,9 +54,10 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         color: "Red",
         style: "Casual",
         description: "Red casual",
-        images: ["/images/dresses/3.jpg"],
+        images: [placeholder],
         alt: "Red Dress B",
       },
+
       {
         id: 4,
         name: "Cheap Item",
@@ -88,8 +67,8 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         color: "Blue",
         style: "Casual",
         description: "Cheap",
-        images: ["/images/dresses/4.jpg"],
-        alt: "Cheap",
+        images: [placeholder],
+        alt: "Cheap Item",
       },
       {
         id: 5,
@@ -100,7 +79,7 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         color: "Green",
         style: "Classic",
         description: "Edge low",
-        images: ["/images/dresses/5.jpg"],
+        images: [placeholder],
         alt: "Edge Low",
       },
       {
@@ -112,7 +91,7 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         color: "Green",
         style: "Classic",
         description: "Edge high",
-        images: ["/images/dresses/6.jpg"],
+        images: [placeholder],
         alt: "Edge High",
       },
       {
@@ -123,10 +102,11 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         sizes: ["L"],
         color: "Black",
         style: "Formal",
-        description: "Expensive",
-        images: ["/images/dresses/7.jpg"],
-        alt: "Expensive",
+        description: "Too expensive",
+        images: [placeholder],
+        alt: "Too Expensive",
       },
+
       {
         id: 10,
         name: "Available A",
@@ -135,9 +115,9 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         sizes: ["M"],
         color: "White",
         style: "Classic",
-        description: "Avail A",
-        images: ["/images/dresses/10.jpg"],
-        alt: "A",
+        description: "Available A",
+        images: [placeholder],
+        alt: "Available A",
       },
       {
         id: 11,
@@ -148,9 +128,10 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         color: "White",
         style: "Classic",
         description: "Booked B",
-        images: ["/images/dresses/11.jpg"],
-        alt: "B",
+        images: [placeholder],
+        alt: "Booked B",
       },
+
       {
         id: 20,
         name: "Dress A Combined",
@@ -159,9 +140,9 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         sizes: ["M"],
         color: "Red",
         style: "Classic",
-        description: "",
-        images: ["/images/dresses/20.jpg"],
-        alt: "DA",
+        description: "Debe pasar combinación",
+        images: [placeholder],
+        alt: "Dress A Combined",
       },
       {
         id: 21,
@@ -171,22 +152,23 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         sizes: ["M"],
         color: "Red",
         style: "Casual",
-        description: "",
-        images: ["/images/dresses/21.jpg"],
-        alt: "DB",
+        description: "No debe aparecer por estilo",
+        images: [placeholder],
+        alt: "Dress B Combined",
       },
       {
         id: 22,
         name: "Dress C Combined",
         category: "dress",
         pricePerDay: 9000,
-        sizes: ["S"],
+        sizes: ["M"],
         color: "Red",
         style: "Classic",
-        description: "",
-        images: ["/images/dresses/22.jpg"],
-        alt: "DC",
+        description: "No debe aparecer por precio",
+        images: [placeholder],
+        alt: "Dress C Combined",
       },
+
       {
         id: 30,
         name: "Zapato A",
@@ -196,7 +178,7 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         color: "Black",
         style: "Casual",
         description: "Zapato A",
-        images: ["/images/dresses/30.jpg"],
+        images: [placeholder],
         alt: "Zapato A",
       },
       {
@@ -208,7 +190,7 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         color: "Red",
         style: "Casual",
         description: "Zapato B",
-        images: ["/images/dresses/31.jpg"],
+        images: [placeholder],
         alt: "Zapato B",
       },
       {
@@ -220,9 +202,10 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         color: "Black",
         style: "Casual",
         description: "Zapato C",
-        images: ["/images/dresses/32.jpg"],
+        images: [placeholder],
         alt: "Zapato C",
       },
+
       {
         id: 40,
         name: "Cartera A",
@@ -232,7 +215,7 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         color: "Champagne",
         style: "Glamorous",
         description: "Cartera A",
-        images: ["/images/dresses/40.jpg"],
+        images: [placeholder],
         alt: "Cartera A",
       },
       {
@@ -244,9 +227,10 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         color: "Black",
         style: "Glamorous",
         description: "Cartera B",
-        images: ["/images/dresses/41.jpg"],
+        images: [placeholder],
         alt: "Cartera B",
       },
+
       {
         id: 50,
         name: "Chaqueta A",
@@ -256,7 +240,7 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         color: "Black",
         style: "Formal",
         description: "Chaqueta A",
-        images: ["/images/dresses/50.jpg"],
+        images: [placeholder],
         alt: "Chaqueta A",
       },
       {
@@ -268,7 +252,7 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
         color: "Black",
         style: "Casual",
         description: "Chaqueta B",
-        images: ["/images/dresses/51.jpg"],
+        images: [placeholder],
         alt: "Chaqueta B",
       },
     ];
@@ -288,132 +272,129 @@ test.describe("Catálogo - flujo completo de interacción con filtros", () => {
     writeData(items, rentals);
   });
 
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/search");
-    await page.waitForSelector('select[name="category"]', { state: "visible" });
+  test.afterAll(() => {
+    try {
+      if (hadItemsFile && originalItemsContent !== null) {
+        fs.writeFileSync(itemsFile, originalItemsContent, "utf8");
+      } else if (!hadItemsFile && fs.existsSync(itemsFile)) {
+        fs.unlinkSync(itemsFile);
+      }
+
+      if (hadRentalsFile && originalRentalsContent !== null) {
+        fs.writeFileSync(rentalsFile, originalRentalsContent, "utf8");
+      } else if (!hadRentalsFile && fs.existsSync(rentalsFile)) {
+        fs.unlinkSync(rentalsFile);
+      }
+    } catch (err) {
+      console.error("Error restaurando datos originales de test:", err);
+    }
   });
 
-  test("CP-001 - Búsqueda por color (RF-001)", async ({ page }) => {
-    await selectOptionByText(page, "color", "Red");
-    await page.getByRole("button", { name: /search/i }).click();
+  let catalog: CatalogPage;
 
-    const cards = page.getByTestId("item-card");
-    await expect(cards.first()).toBeVisible();
+  test.beforeEach(async ({ page }) => {
+    catalog = new CatalogPage(page);
+    await catalog.goto();
+  });
 
-    const count = await cards.count();
+  test("Búsqueda por color", async () => {
+    await catalog.setColor("Red");
+    await catalog.submit();
+
+    const count = await catalog.getCardsCount();
     expect(count).toBeGreaterThan(0);
 
     for (let i = 0; i < count; i++) {
-      const color = (await cards.nth(i).getAttribute("data-color")) ?? "";
+      const color = await catalog.getCardColorByIndex(i);
       expect(color).toBe("Red");
     }
   });
 
-  test("CP-002 - Búsqueda sin resultados (RF-001)", async ({ page }) => {
-    await page.fill('input[name="q"]', "zzzz-no-existe-xyz-123-@@");
-    await page.getByRole("button", { name: /search/i }).click();
+  test("Búsqueda sin resultados", async () => {
+    await catalog.setQuery("zzzz-no-existe-xyz-123-@@");
+    await catalog.submit();
 
-    await expect(page.getByTestId("item-card")).toHaveCount(0);
-    await expect(page.getByText("No items match your filters.")).toBeVisible();
+    await expect(catalog.cards).toHaveCount(0);
+    await expect(catalog.getNoResultsMessage()).toBeVisible();
   });
 
-  test("CP-020 - Filtro por disponibilidad en fechas (RNF-011)", async ({
-    page,
-  }) => {
-    await page.fill('input[name="start"]', "2025-10-12");
-    await page.fill('input[name="end"]', "2025-10-14");
-    await page.getByRole("button", { name: /search/i }).click();
+  test("Filtro por disponibilidad en fechas", async () => {
+    await catalog.setDateRange("2025-10-12", "2025-10-14");
+    await catalog.submit();
 
-    await expect(page.getByText("Available A")).toBeVisible();
-    await expect(page.getByText("Booked B")).toHaveCount(0);
+    await expect(catalog.getItemByName("Available A")).toBeVisible();
+    await expect(catalog.getItemByName("Booked B")).toHaveCount(0);
   });
 
-  test("CP-021 - Rango de precios con límites (RNF-012)", async ({ page }) => {
-    const min = 1000;
-    const max = 20000;
+  test("Rango de precios con límites", async () => {
+    const min = "1000";
+    const max = "20000";
 
-    await page.fill('input[name="minPrice"]', String(min));
-    await page.fill('input[name="maxPrice"]', String(max));
-    await page.getByRole("button", { name: /search/i }).click();
+    await catalog.setPriceRange(min, max);
+    await catalog.submit();
 
-    await expect(page.getByText("Edge Low")).toBeVisible();
-    await expect(page.getByText("Edge High")).toBeVisible();
-    await expect(page.getByText("Cheap Item")).toHaveCount(0);
-    await expect(page.getByText("Too Expensive")).toHaveCount(0);
+    await expect(catalog.getItemByName("Edge Low")).toBeVisible();
+    await expect(catalog.getItemByName("Edge High")).toBeVisible();
+    await expect(catalog.getItemByName("Cheap Item")).toHaveCount(0);
+    await expect(catalog.getItemByName("Too Expensive")).toHaveCount(0);
   });
 
-  test("CP-024 - Vestidos: combinación de filtros (RF-014)", async ({
-    page,
-  }) => {
-    await selectOptionByText(page, "category", "Dresses");
-    await selectOptionByText(page, "size", "M");
-    await selectOptionByText(page, "color", "Red");
-    await selectOptionByText(page, "style", "Classic");
+  test("Vestidos: combinación de filtros", async () => {
+    await catalog.setCategory("dress");
+    await catalog.setSize("M");
+    await catalog.setColor("Red");
+    await catalog.setStyle("Classic");
 
-    await page.fill('input[name="minPrice"]', "3000");
-    await page.fill('input[name="maxPrice"]', "7000");
-    await page.fill('input[name="start"]', "2025-11-01");
-    await page.fill('input[name="end"]', "2025-11-05");
+    await catalog.setPriceRange("3000", "7000");
+    await catalog.setDateRange("2025-11-01", "2025-11-05");
 
-    await page.getByRole("button", { name: /search/i }).click();
+    await catalog.submit();
 
-    await expect(page.getByText("Dress A Combined")).toBeVisible();
-    await expect(page.getByText("Dress B Combined")).toHaveCount(0);
-    await expect(page.getByText("Dress C Combined")).toHaveCount(0);
+    await expect(catalog.getItemByName("Dress A Combined")).toBeVisible();
+    await expect(catalog.getItemByName("Dress B Combined")).toHaveCount(0);
+    await expect(catalog.getItemByName("Dress C Combined")).toHaveCount(0);
   });
 
-  test("CP-025 - Zapatos: combinación de filtros (RF-015)", async ({
-    page,
-  }) => {
-    await selectOptionByText(page, "category", "Shoes");
-    await selectOptionByText(page, "size", "38");
-    await selectOptionByText(page, "color", "Black");
+  test("Zapatos: combinación de filtros", async () => {
+    await catalog.setCategory("shoes");
+    await catalog.setSize("38");
+    await catalog.setColor("Black");
 
-    await page.fill('input[name="minPrice"]', "4000");
-    await page.fill('input[name="maxPrice"]', "6000");
-    await page.fill('input[name="start"]', "2025-12-12");
-    await page.fill('input[name="end"]', "2025-12-15");
+    await catalog.setPriceRange("4000", "6000");
+    await catalog.setDateRange("2025-12-12", "2025-12-15");
 
-    await page.getByRole("button", { name: /search/i }).click();
+    await catalog.submit();
 
-    await expect(page.getByText("Zapato A")).toBeVisible();
-    await expect(page.getByText("Zapato B")).toHaveCount(0);
-    await expect(page.getByText("Zapato C")).toHaveCount(0);
+    await expect(catalog.getItemByName("Zapato A")).toBeVisible();
+    await expect(catalog.getItemByName("Zapato B")).toHaveCount(0);
+    await expect(catalog.getItemByName("Zapato C")).toHaveCount(0);
   });
 
-  test("CP-026 - Carteras/Bolsos: combinación de filtros (RF-016)", async ({
-    page,
-  }) => {
-    await selectOptionByText(page, "category", "Bags");
-    await selectOptionByText(page, "color", "Champagne");
+  test("Carteras/Bolsos: combinación de filtros", async () => {
+    await catalog.setCategory("bag");
+    await catalog.setColor("Champagne");
 
-    await page.fill('input[name="minPrice"]', "7000");
-    await page.fill('input[name="maxPrice"]', "9000");
-    await page.fill('input[name="start"]', "2026-01-06");
-    await page.fill('input[name="end"]', "2026-01-08");
+    await catalog.setPriceRange("7000", "9000");
+    await catalog.setDateRange("2026-01-06", "2026-01-08");
 
-    await page.getByRole("button", { name: /search/i }).click();
+    await catalog.submit();
 
-    await expect(page.getByText("Cartera A")).toBeVisible();
-    await expect(page.getByText("Cartera B")).toHaveCount(0);
+    await expect(catalog.getItemByName("Cartera A")).toBeVisible();
+    await expect(catalog.getItemByName("Cartera B")).toHaveCount(0);
   });
 
-  test("CP-028 - Chaquetas: combinación de filtros (RF-017)", async ({
-    page,
-  }) => {
-    await selectOptionByText(page, "category", "Jackets");
-    await selectOptionByText(page, "size", "M");
-    await selectOptionByText(page, "color", "Black");
-    await selectOptionByText(page, "style", "Formal");
+  test("Chaquetas: combinación de filtros", async () => {
+    await catalog.setCategory("jacket");
+    await catalog.setSize("M");
+    await catalog.setColor("Black");
+    await catalog.setStyle("Formal");
 
-    await page.fill('input[name="minPrice"]', "9000");
-    await page.fill('input[name="maxPrice"]', "11000");
-    await page.fill('input[name="start"]', "2026-03-16");
-    await page.fill('input[name="end"]', "2026-03-18");
+    await catalog.setPriceRange("9000", "11000");
+    await catalog.setDateRange("2026-03-16", "2026-03-18");
 
-    await page.getByRole("button", { name: /search/i }).click();
+    await catalog.submit();
 
-    await expect(page.getByText("Chaqueta A")).toBeVisible();
-    await expect(page.getByText("Chaqueta B")).toHaveCount(0);
+    await expect(catalog.getItemByName("Chaqueta A")).toBeVisible();
+    await expect(catalog.getItemByName("Chaqueta B")).toHaveCount(0);
   });
 });

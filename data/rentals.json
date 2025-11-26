@@ -1,15 +1,2 @@
 [
-  {
-    "id": "r1",
-    "itemId": 11,
-    "start": "2025-10-12",
-    "end": "2025-10-15",
-    "customer": {
-      "name": "X",
-      "email": "x@x.com",
-      "phone": ""
-    },
-    "createdAt": "2025-11-26T03:02:42.008Z",
-    "status": "active"
-  }
 ]

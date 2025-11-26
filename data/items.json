@@ -1,300 +1,76 @@
 [
      {
     "id": 1,
-    "name": "Red Dress A",
+    "name": "Silk Evening Gown",
     "category": "dress",
-    "pricePerDay": 5000,
+    "pricePerDay": 79,
     "sizes": [
-      "M"
+      "XS",
+      "S",
+      "M",
+      "L"
     ],
-    "color": "Red",
-    "style": "Classic",
-    "description": "A red classic dress",
+    "color": "champagne",
+    "style": "evening",
+    "description": "Luxurious silk gown with flattering silhouette.",
     "images": [
-      "/images/dresses/1.jpg"
+      "/images/dresses/silk-evening-gown.jpg"
     ],
-    "alt": "Red Dress"
+    "alt": "Model wearing a champagne silk evening gown"
   },
   {
     "id": 2,
-    "name": "Gold Bag",
-    "category": "bag",
-    "pricePerDay": 8000,
-    "sizes": [],
-    "color": "Gold",
-    "style": "Glamorous",
-    "description": "Golden bag",
-    "images": [
-      "/images/dresses/2.jpg"
+    "name": "Black Tie Dress",
+    "category": "dress",
+    "pricePerDay": 99,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
     ],
-    "alt": "Gold Bag"
+    "color": "black",
+    "style": "black-tie",
+    "description": "Elegant black-tie dress for formal events.",
+    "images": [
+      "/images/dresses/black-tie-dress.jpg"
+    ],
+    "alt": "Elegant black tie dress"
   },
   {
     "id": 3,
-    "name": "Red Dress B",
+    "name": "Floral Midi Dress",
     "category": "dress",
-    "pricePerDay": 9000,
+    "pricePerDay": 49,
     "sizes": [
-      "S"
+      "XS",
+      "S",
+      "M"
     ],
-    "color": "Red",
-    "style": "Casual",
-    "description": "Red casual",
+    "color": "floral",
+    "style": "daytime",
+    "description": "Bright floral midi for daytime events.",
     "images": [
-      "/images/dresses/3.jpg"
+      "/images/dresses/floral-midi-dress.jpg"
     ],
-    "alt": "Red Dress B"
+    "alt": "Floral midi dress perfect for daytime events"
   },
   {
     "id": 4,
-    "name": "Cheap Item",
+    "name": "Velvet Cocktail Dress",
     "category": "dress",
-    "pricePerDay": 800,
+    "pricePerDay": 59,
     "sizes": [
-      "M"
-    ],
-    "color": "Blue",
-    "style": "Casual",
-    "description": "Cheap",
-    "images": [
-      "/images/dresses/4.jpg"
-    ],
-    "alt": "Cheap"
-  },
-  {
-    "id": 5,
-    "name": "Edge Low",
-    "category": "dress",
-    "pricePerDay": 1000,
-    "sizes": [
+      "S",
+      "M",
       "L"
     ],
-    "color": "Green",
-    "style": "Classic",
-    "description": "Edge low",
+    "color": "burgundy",
+    "style": "cocktail",
+    "description": "Rich velvet cocktail dress in deep tones.",
     "images": [
-      "/images/dresses/5.jpg"
+      "/images/dresses/velvet-cocktail-dress.jpg"
     ],
-    "alt": "Edge Low"
-  },
-  {
-    "id": 6,
-    "name": "Edge High",
-    "category": "dress",
-    "pricePerDay": 20000,
-    "sizes": [
-      "L"
-    ],
-    "color": "Green",
-    "style": "Classic",
-    "description": "Edge high",
-    "images": [
-      "/images/dresses/6.jpg"
-    ],
-    "alt": "Edge High"
-  },
-  {
-    "id": 7,
-    "name": "Too Expensive",
-    "category": "dress",
-    "pricePerDay": 21000,
-    "sizes": [
-      "L"
-    ],
-    "color": "Black",
-    "style": "Formal",
-    "description": "Expensive",
-    "images": [
-      "/images/dresses/7.jpg"
-    ],
-    "alt": "Expensive"
-  },
-  {
-    "id": 10,
-    "name": "Available A",
-    "category": "dress",
-    "pricePerDay": 4000,
-    "sizes": [
-      "M"
-    ],
-    "color": "White",
-    "style": "Classic",
-    "description": "Avail A",
-    "images": [
-      "/images/dresses/10.jpg"
-    ],
-    "alt": "A"
-  },
-  {
-    "id": 11,
-    "name": "Booked B",
-    "category": "dress",
-    "pricePerDay": 4500,
-    "sizes": [
-      "M"
-    ],
-    "color": "White",
-    "style": "Classic",
-    "description": "Booked B",
-    "images": [
-      "/images/dresses/11.jpg"
-    ],
-    "alt": "B"
-  },
-  {
-    "id": 20,
-    "name": "Dress A Combined",
-    "category": "dress",
-    "pricePerDay": 5000,
-    "sizes": [
-      "M"
-    ],
-    "color": "Red",
-    "style": "Classic",
-    "description": "",
-    "images": [
-      "/images/dresses/20.jpg"
-    ],
-    "alt": "DA"
-  },
-  {
-    "id": 21,
-    "name": "Dress B Combined",
-    "category": "dress",
-    "pricePerDay": 5000,
-    "sizes": [
-      "M"
-    ],
-    "color": "Red",
-    "style": "Casual",
-    "description": "",
-    "images": [
-      "/images/dresses/21.jpg"
-    ],
-    "alt": "DB"
-  },
-  {
-    "id": 22,
-    "name": "Dress C Combined",
-    "category": "dress",
-    "pricePerDay": 9000,
-    "sizes": [
-      "S"
-    ],
-    "color": "Red",
-    "style": "Classic",
-    "description": "",
-    "images": [
-      "/images/dresses/22.jpg"
-    ],
-    "alt": "DC"
-  },
-  {
-    "id": 30,
-    "name": "Zapato A",
-    "category": "shoes",
-    "pricePerDay": 5000,
-    "sizes": [
-      "38"
-    ],
-    "color": "Black",
-    "style": "Casual",
-    "description": "Zapato A",
-    "images": [
-      "/images/dresses/30.jpg"
-    ],
-    "alt": "Zapato A"
-  },
-  {
-    "id": 31,
-    "name": "Zapato B",
-    "category": "shoes",
-    "pricePerDay": 5000,
-    "sizes": [
-      "38"
-    ],
-    "color": "Red",
-    "style": "Casual",
-    "description": "Zapato B",
-    "images": [
-      "/images/dresses/31.jpg"
-    ],
-    "alt": "Zapato B"
-  },
-  {
-    "id": 32,
-    "name": "Zapato C",
-    "category": "shoes",
-    "pricePerDay": 7000,
-    "sizes": [
-      "39"
-    ],
-    "color": "Black",
-    "style": "Casual",
-    "description": "Zapato C",
-    "images": [
-      "/images/dresses/32.jpg"
-    ],
-    "alt": "Zapato C"
-  },
-  {
-    "id": 40,
-    "name": "Cartera A",
-    "category": "bag",
-    "pricePerDay": 8000,
-    "sizes": [],
-    "color": "Champagne",
-    "style": "Glamorous",
-    "description": "Cartera A",
-    "images": [
-      "/images/dresses/40.jpg"
-    ],
-    "alt": "Cartera A"
-  },
-  {
-    "id": 41,
-    "name": "Cartera B",
-    "category": "bag",
-    "pricePerDay": 8000,
-    "sizes": [],
-    "color": "Black",
-    "style": "Glamorous",
-    "description": "Cartera B",
-    "images": [
-      "/images/dresses/41.jpg"
-    ],
-    "alt": "Cartera B"
-  },
-  {
-    "id": 50,
-    "name": "Chaqueta A",
-    "category": "jacket",
-    "pricePerDay": 10000,
-    "sizes": [
-      "M"
-    ],
-    "color": "Black",
-    "style": "Formal",
-    "description": "Chaqueta A",
-    "images": [
-      "/images/dresses/50.jpg"
-    ],
-    "alt": "Chaqueta A"
-  },
-  {
-    "id": 51,
-    "name": "Chaqueta B",
-    "category": "jacket",
-    "pricePerDay": 10000,
-    "sizes": [
-      "M"
-    ],
-    "color": "Black",
-    "style": "Casual",
-    "description": "Chaqueta B",
-    "images": [
-      "/images/dresses/51.jpg"
-    ],
-    "alt": "Chaqueta B"
+    "alt": "Velvet cocktail dress in deep tones"
   }
 ]

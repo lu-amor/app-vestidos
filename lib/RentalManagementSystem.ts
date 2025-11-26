@@ -3,10 +3,28 @@ import path from 'path';
 
 export type Category = "dress" | "shoes" | "bag" | "jacket";
 
+function normalizeCategory(raw?: string | null): Category | undefined {
+  if (!raw) return undefined;
+
+  const map: Record<string, Category> = {
+    dress: "dress",
+    dresses: "dress",
+    shoe: "shoes",
+    shoes: "shoes",
+    bag: "bag",
+    bags: "bag",
+    jacket: "jacket",
+    jackets: "jacket",
+  };
+
+  const key = raw.toLowerCase();
+  return map[key];
+}
+
 export type Item = {
   id: number;
   name: string;
-  category: Category;
+  category: string;
   pricePerDay: number;
   sizes: string[];
   color: string;
@@ -219,7 +237,7 @@ export function removeColorOption(color: string) {
 
 export function listItems(filters?: {
   q?: string;
-  category?: Category;
+  category?: string;
   size?: string;
   color?: string;
   style?: string;
@@ -229,29 +247,50 @@ export function listItems(filters?: {
   maxPrice?: number;
 }) {
   const items = readItemsFile();
-  const q = (filters?.q || '').toLowerCase().trim();
+  const q = filters?.q ? filters.q.toLowerCase().trim() : "";
+  const filterCategory = normalizeCategory(filters?.category ?? undefined);
 
   return items.filter((it) => {
-    if (filters?.category && it.category !== filters.category) return false;
+    const itemCategory = normalizeCategory(it.category);
+
+    if (filterCategory && itemCategory !== filterCategory) return false;
+
     if (filters?.size && !it.sizes.includes(filters.size)) return false;
-    if (filters?.color && it.color.toLowerCase() !== filters.color.toLowerCase()) return false;
-    if (filters?.style && (it.style ?? "").toLowerCase() !== filters.style.toLowerCase()) return false;
-    if (typeof filters?.minPrice === "number" && it.pricePerDay < filters.minPrice) {
+    if (
+      filters?.color &&
+      it.color.toLowerCase() !== filters.color.toLowerCase()
+    )
+      return false;
+    if (
+      filters?.style &&
+      (it.style ?? "").toLowerCase() !== filters.style.toLowerCase()
+    )
+      return false;
+    if (
+      typeof filters?.minPrice === "number" &&
+      it.pricePerDay < filters.minPrice
+    ) {
       return false;
     }
-    if (typeof filters?.maxPrice === "number" && it.pricePerDay > filters.maxPrice) {
+    if (
+      typeof filters?.maxPrice === "number" &&
+      it.pricePerDay > filters.maxPrice
+    ) {
       return false;
     }
     if (filters?.start && filters?.end) {
       if (!isItemAvailable(it.id, filters.start, filters.end)) return false;
     }
     if (q) {
-      const haystack = [it.name, it.color, it.style ?? "", it.category].join(" ").toLowerCase();
+      const haystack = [it.name, it.color, it.style ?? "", it.category]
+        .join(" ")
+        .toLowerCase();
       if (!haystack.includes(q)) return false;
     }
     return true;
   });
 }
+
 
 export function getItem(id: number) {
   const items = readItemsFile();

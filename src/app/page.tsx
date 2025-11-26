@@ -1,10 +1,25 @@
 import Image from "next/image";
 import Link from "next/link";
-import { listItems, Item } from "../../lib/RentalManagementSystem";
+import { listItems, Item, Category } from "../../lib/RentalManagementSystem";
 import SearchFilters from "../components/SearchFilters";
 
-export default function Home({ searchParams }: { searchParams: any }) {
-  // Tomamos todos los posibles filtros de la query
+// Hacemos el componente async y tipamos searchParams como Promise de objeto
+type HomeSearchParams = Promise<{
+  q?: string;
+  category?: string;
+  size?: string;
+  color?: string;
+  style?: string;
+  start?: string;
+  end?: string;
+  minPrice?: string;
+  maxPrice?: string;
+}>;
+
+export default async function Home({ searchParams }: { searchParams: HomeSearchParams }) {
+  // Esperamos los searchParams ANTES de usarlos
+  const params = (await searchParams) || {};
+
   const {
     q = "",
     category = "",
@@ -15,9 +30,8 @@ export default function Home({ searchParams }: { searchParams: any }) {
     end = "",
     minPrice = "",
     maxPrice = "",
-  } = searchParams || {};
+  } = params;
 
-  // Usamos listItems con TODOS los filtros disponibles
   const featured: Array<{
     id: number;
     name: string;
@@ -26,7 +40,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
     alt: string;
   }> = listItems({
     q,
-    category: category || undefined,
+    category: category ? (category as Category) : undefined,
     size: size || undefined,
     color: color || undefined,
     style: style || undefined,
@@ -35,7 +49,6 @@ export default function Home({ searchParams }: { searchParams: any }) {
     minPrice: minPrice ? Number(minPrice) : undefined,
     maxPrice: maxPrice ? Number(maxPrice) : undefined,
   })
-    // nos quedamos solo con vestidos para "Featured"
     .filter((it: Item) => it.category === "dress")
     .slice(0, 4)
     .map((it: Item) => ({
@@ -66,7 +79,6 @@ export default function Home({ searchParams }: { searchParams: any }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#f4f3ee] to-[#bcb8b1] text-[#463f3a] dark:from-slate-950 dark:to-slate-900 dark:text-slate-100">
-      {/* Header se mantiene igual */}
       <header className="sticky top-0 z-30 backdrop-blur bg-[#463f3a]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between shadow-lg">
           <Link
@@ -108,7 +120,8 @@ export default function Home({ searchParams }: { searchParams: any }) {
                 Look stunning without the price tag. Flexible rentals, free
                 cleaning, and fast delivery.
               </p>
-              {/* El buscador usa TODOS los filtros y los rellena con lo que haya en la URL */}
+
+              {/* MISMOS filtros que en /search */}
               <form action="/search" method="GET" className="mt-8">
                 <SearchFilters
                   defaults={{
@@ -129,7 +142,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
           </div>
         </section>
 
-        {/* Featured picks (ya respetando los mismos filtros) */}
+        {/* Featured picks */}
         <section
           id="featured"
           className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16"
