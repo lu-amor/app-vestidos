@@ -10,10 +10,10 @@ export class LoginPage {
 
     constructor(page: Page) {
         this.page = page;
-        this.usernameInput = page.getByLabel('Usuario');
-        this.passwordInput = page.getByLabel('Contraseña');
-        this.signInButton = page.getByRole('button', { name: 'Iniciar Sesión' });
-        this.adminSignInHeading = page.getByRole('heading', { name: 'Panel de Administración' });
+        this.usernameInput = page.getByLabel('Username');
+        this.passwordInput = page.getByLabel('Password');
+        this.signInButton = page.getByRole('button', { name: 'Log In' });
+        this.adminSignInHeading = page.getByRole('heading', { name: 'Admin Panel' });
     }
 
     async goto(url: string) {

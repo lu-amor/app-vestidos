@@ -20,8 +20,8 @@ export default function ConfirmDialog({
   onConfirm,
   title,
   message,
-  confirmText = 'Confirmar',
-  cancelText = 'Cancelar',
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
   loading = false
 }: ConfirmDialogProps) {
 
@@ -47,7 +47,7 @@ export default function ConfirmDialog({
             disabled={loading}
             className="px-4 py-2 text-[#463f3a] rounded-full bg-[#e0afa0] font-semibold hover:bg-[#463f3a] hover:text-[#f4f3ee] transition-colors"
           >
-            {loading ? 'Procesando...' : confirmText}
+            {loading ? 'Processing...' : confirmText}
           </button>
         </div>
       </div>

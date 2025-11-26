@@ -15,8 +15,8 @@ test.describe('Admin filter management', () => {
         const newColor = 'newcolor' + Date.now();
         console.log('Adding color:', newColor);
 
-        await page.getByPlaceholder('Nuevo color').fill(newColor);
-        await page.getByRole('button', { name: 'Agregar' }).click();
+        await page.getByPlaceholder('New color').fill(newColor);
+        await page.getByTestId('admin-add-color-btn').click();
 
         await expect(page.getByText('Color agregado')).toBeVisible();
 

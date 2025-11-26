@@ -9,7 +9,7 @@ export default async function AdminLogin() {
     <div className="min-h-screen bg-[#f4f3ee] flex items-center justify-center px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Panel de Administración</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
         </div>
         
         <div className="border border-gray-700 rounded-4xl shadow-lg p-6">
@@ -18,12 +18,12 @@ export default async function AdminLogin() {
             
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-300 mb-1 text-gray-900">
-                Usuario
+                Username
               </label>
               <input 
                 id="username"
                 name="username" 
-                placeholder="Nombre de usuario" 
+                placeholder="Username" 
                 className="w-full px-4 py-3 border border-gray-600 rounded-full focus:ring-2 focus:ring-[#463f3a] focus:border-[#463f3a] bg-800 placeholder-gray-400 text-gray-900"
                 autoComplete="username"
                 defaultValue="admin"
@@ -32,13 +32,13 @@ export default async function AdminLogin() {
             
             <div>
               <label htmlFor="password" className="block text-sm font-medium text--300 mb-1 text-gray-900">
-                Contraseña
+                Password
               </label>
               <input 
                 id="password"
                 name="password" 
                 type="password" 
-                placeholder="Contraseña" 
+                placeholder="Password" 
                 className="w-full px-4 py-3 border border-gray-600 rounded-full focus:ring-2 focus:ring-[#463f3a] focus:border-[#463f3a] bg-800 placeholder-gray-400 text-gray-900"
                 autoComplete="password"
                 defaultValue="admin123"
@@ -49,11 +49,11 @@ export default async function AdminLogin() {
               type="submit" 
               className="w-full bg-[#e0afa0] hover:bg-[#c18f87] text-[#463f3a] px-4 py-3 rounded-full font-semibold transition-colors"
             >
-              Iniciar Sesión
+              Log In
             </button>
           </form>
           <p className="text-xs text-gray-500 text-center mt-4">
-            Área protegida. Solo personal autorizado.
+            Protected area. Authorized personnel only.
           </p>
         </div>
       </div>
