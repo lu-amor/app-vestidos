@@ -16,5 +16,5 @@ test('al hacer click en el logo va al inicio', async ({ page }) => {
 
     await faq.clickGlamRent();
 
-    await expect(page.getByText('Rent designer dresses for every')).toBeVisible();
+    await expect(page.getByText('Look stunning without the price tag. Flexible rentals, free cleaning, and fast delivery.')).toBeVisible();
 });

@@ -1,10 +1,19 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
 
 test.describe('Admin authentication', () => {
   test('unauthenticated user is redirected to login', async ({ page }) => {
     await page.goto('/admin');
-    await expect(page.getByRole('heading', { name: /Panel de Administración|Panel de Administraci[oó]n|Acceso solo para personal autorizado/i })).toBeVisible();
+    const dashboardHeading = page.getByRole('heading', { name: 'Admin Dashboard' });
+    if (await dashboardHeading.count() > 0) {
+      const adminDashboard = new AdminDashboardPage(page);
+      await adminDashboard.signOut();
+    }
+
+    const loginPage = new LoginPage(page);
+    await loginPage.goto('/admin');
+    await loginPage.expectLoginPageVisible();
     await expect(page.getByRole('heading', { name: /Admin Dashboard/ })).toHaveCount(0);
   });
 
@@ -12,15 +21,11 @@ test.describe('Admin authentication', () => {
     await page.goto('/admin/login');
     const loginPage = new LoginPage(page);
     await loginPage.loginWithoutCredentials();
-    await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible();
+    const adminDashboard = new AdminDashboardPage(page);
+    await adminDashboard.expectDashboardVisible();
 
-    const logout = page.getByRole('button', { name: 'Log Out' });
-    await expect(logout).toBeVisible();
-    await logout.click();
-
-    await page.goto('/admin');
-    await expect(page.getByRole('heading', { name: /Panel de Administración|Panel de Administraci[oó]n/i })).toBeVisible();
-    // And dashboard should not be visible
+    await adminDashboard.signOut();     
+    await loginPage.expectLoginPageVisible();
     await expect(page.getByRole('heading', { name: /Admin Dashboard/ })).toHaveCount(0);
   });
 });

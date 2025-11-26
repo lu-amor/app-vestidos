@@ -1,12 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
 
 test.describe('Admin filter management', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/admin/login');
         const loginPage = new LoginPage(page);
         await loginPage.loginWithoutCredentials();
-        await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible();
+        const adminDashboard = new AdminDashboardPage(page);
+        await adminDashboard.expectDashboardVisible();
     });
 
     test('admin adds new color', async ({ page }) => {

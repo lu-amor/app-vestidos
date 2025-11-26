@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
 import { DetailsPage } from './pages/DetailsPage';
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { appUrls } from './testData/urls';
 import { fillRentalForm } from './fixtures/rental';
 
@@ -20,7 +21,8 @@ test.describe('flujos de admin', () => {
         await page.goto('/admin/login');
         const loginPage = new LoginPage(page);
         await loginPage.loginWithoutCredentials();
-        await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible();
+        const adminDashboard = new AdminDashboardPage(page);
+        await adminDashboard.expectDashboardVisible();
     });
 
     test('cancel rental from dashboard', async ({ page }) => {
