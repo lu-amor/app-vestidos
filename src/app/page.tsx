@@ -178,6 +178,9 @@ export default function Home() {
           <p className="text-sm text-slate-600 dark:text-slate-400">
             © {new Date().getFullYear()} GlamRent. All rights reserved.
           </p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+                <strong>Contact us:</strong> glamrent@example.com
+            </p>
         </div>
       </footer>
     </div>

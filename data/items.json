@@ -1,4 +1,23 @@
 [
+     {
+    "id": 1,
+    "name": "Silk Evening Gown",
+    "category": "dress",
+    "pricePerDay": 79,
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L"
+    ],
+    "color": "champagne",
+    "style": "evening",
+    "description": "Luxurious silk gown with flattering silhouette.",
+    "images": [
+      "/images/dresses/silk-evening-gown.jpg"
+    ],
+    "alt": "Model wearing a champagne silk evening gown"
+  },
   {
     "id": 2,
     "name": "Black Tie Dress",
