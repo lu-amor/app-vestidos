@@ -1,14 +1,17 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/createItem';
 import { DetailsPage } from './pages/DetailsPage';
-import { appUrls } from './testData/urls';
-import { fillRentalForm } from './fixtures/rental';
 
 test.describe('detailsForm', () => {
     let details: DetailsPage;
 
-    test.beforeEach(async ({ page }) => {
+    let createdId: number | null = null;
+
+    test.beforeEach(async ({ page, createdItemId }) => {
+        createdId = createdItemId ?? null;
+
         details = new DetailsPage(page);
-        await details.goto("3");
+        const idToGo = (createdId && createdId > 0) ? String(createdId) : "3";
+        await details.goto(idToGo);
         await page.waitForLoadState('networkidle');
         await expect(page.locator('text=This page could not be found.')).not.toBeVisible();
         await details.waitForVisible();
@@ -33,7 +36,8 @@ test.describe('detailsForm', () => {
         await details.submitAndExpectToast('Request submitted — we will confirm via email.');
 
         details = new DetailsPage(page);
-        await details.goto("3");
+        const idToGo = (createdId && createdId > 0) ? String(createdId) : "3";
+        await details.goto(idToGo);
         await details.waitForVisible(); 
 
         await details.fillRentalForm({ startFromToday: 3, duration: 1 });
