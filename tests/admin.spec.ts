@@ -3,7 +3,6 @@ import { LoginPage } from './pages/LoginPage';
 import { DetailsPage } from './pages/DetailsPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { appUrls } from './testData/urls';
-import { fillRentalForm } from './fixtures/rental';
 
 let createdRentalId: string | null = null;
 
@@ -15,7 +14,7 @@ test.describe('flujos de admin', () => {
         const details = new DetailsPage(page);
         await details.waitForVisible();
 
-        await fillRentalForm(details, { name: "prueba", startFromToday: 40, duration: 1 });
+        await details.fillRentalForm({ name: "prueba", startFromToday: 40, duration: 1 });
         await details.submitAndExpectToast('Request submitted — we will confirm via email.');
 
         await page.goto('/admin/login');
