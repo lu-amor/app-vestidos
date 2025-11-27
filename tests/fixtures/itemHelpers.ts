@@ -19,9 +19,4 @@ export async function fillItemForm(page: Page, name: string) {
   }
   const desc = page.locator('textarea[placeholder^="Describe el item"]');
   if (await desc.count()) await desc.fill('Descripción de prueba');
-  const fileInput = page.locator('input[type="file"]');
-  if (await fileInput.count()) {
-    const imgPath = 'public/images/dresses/silk-evening-gown.jpg';
-    await fileInput.setInputFiles(imgPath);
-  }
 }
