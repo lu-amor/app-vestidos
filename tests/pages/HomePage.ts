@@ -15,6 +15,11 @@ export class HomePage {
     async goto() : Promise<void> {
         await this.page.goto(appUrls.home)
     }
+
+    async expectVisible() : Promise<void> {
+        await this.page.waitForLoadState('networkidle');
+        await this.page.getByText('Look stunning without the price tag. Flexible rentals, free cleaning, and fast delivery.').isVisible();
+    }
 }
 
 // Se añaden las definiciones de los elementos y los métodos correspondientes a acciones
