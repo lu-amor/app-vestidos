@@ -1,20 +1,19 @@
 import { test, expect } from '@playwright/test';
 import { FAQPage } from './pages/FAQPage';
+import { HomePage } from './pages/HomePage';
 
 test('FAQ page contains expected text', async ({ page }) => {
     const faq = new FAQPage(page);
     await faq.goto();
-
-    await expect(page.getByRole('heading', { name: 'Frequently Asked Questions' })).toBeVisible();
-
-    await expect(page.getByText('How does the rental work?')).toBeVisible();
+    await faq.expectVisible();
 });
 
 test('al hacer click en el logo va al inicio', async ({ page }) => {
     const faq = new FAQPage(page);
+    const homePage = new HomePage(page);
     await faq.goto();
 
     await faq.clickGlamRent();
 
-    await expect(page.getByText('Look stunning without the price tag. Flexible rentals, free cleaning, and fast delivery.')).toBeVisible();
+    await homePage.expectVisible();
 });
