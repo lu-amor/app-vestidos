@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 import { appUrls } from '../testData/urls';
 
 export class HomePage {
@@ -18,7 +18,7 @@ export class HomePage {
 
     async expectVisible() : Promise<void> {
         await this.page.waitForLoadState('networkidle');
-        await this.page.getByText('Look stunning without the price tag. Flexible rentals, free cleaning, and fast delivery.').isVisible();
+        await expect(this.page.getByText('Look stunning without the price tag. Flexible rentals, free cleaning, and fast delivery.')).toBeVisible();
     }
 }
 
